@@ -1,0 +1,3 @@
+Firebase disimpan di sini dan BELUM dipakai.
+
+Untuk uji coba sekarang pakai folder 03-backend-lokal + 04-database.

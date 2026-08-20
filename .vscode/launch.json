@@ -1,0 +1,20 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Customer Android",
+      "request": "launch",
+      "type": "dart",
+      "cwd": "${workspaceFolder}/05-aplikasi/customer-android",
+      "program": "lib/main.dart",
+      "toolArgs": []
+    },
+    {
+      "name": "Kurir Android",
+      "request": "launch",
+      "type": "dart",
+      "cwd": "${workspaceFolder}/05-aplikasi/kurir-android",
+      "program": "lib/main.dart"
+    }
+  ]
+}

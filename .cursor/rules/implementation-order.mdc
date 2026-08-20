@@ -1,0 +1,15 @@
+---
+description: Follow phased implementation order for this marketplace
+alwaysApply: true
+---
+
+# Folder map
+
+- `01-dokumentasi` — PRD and flows
+- `02-aturan-bisnis` — locked fee formulas
+- `03-backend-lokal` — running local API
+- `04-database` — SQLite file
+- `05-aplikasi` — future apps
+- `99-firebase-nanti` — not used during local review
+
+Keep financial logic in local-api quote service. Do not require Firebase yet.

@@ -1,0 +1,7 @@
+Folder aplikasi:
+
+- customer-android → aplikasi pembeli (Flutter)
+- kurir-android    → aplikasi kurir (Flutter)
+- outlet-android   → aplikasi outlet (Flutter)
+- web-outlet       → cadangan Next.js outlet nanti
+- web-admin        → Super Admin web (monitoring fee/customer/kurir)

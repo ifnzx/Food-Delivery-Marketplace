@@ -1,0 +1,4 @@
+File database uji coba: local.db
+
+Buka isinya dengan Prisma Studio:
+dari folder 03-backend-lokal jalankan npm run studio

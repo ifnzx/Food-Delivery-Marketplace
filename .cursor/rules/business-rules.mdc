@@ -1,0 +1,27 @@
+---
+description: Locked food delivery business rules — do not change during implementation
+alwaysApply: true
+---
+
+# Locked business rules
+
+Do not change these **defaults** unless the user explicitly asks. Super Admin may override live rates via `Setting` (`commissionRate`, `deliveryMode` PER_KM|FLAT, `deliveryRatePerKm`, `deliveryFlatFee`). Quote service must read those settings.
+
+```
+COMMISSION_RATE = 0.15
+DELIVERY_RATE_PER_KM = 2000
+CUSTOMER_SERVICE_FEE = 0
+PAYMENT_METHOD_MVP = CASH
+ONLINE_PAYMENTS_ENABLED_DEFAULT = false
+PAYMENT_PROVIDER_DEFAULT = NONE
+SETTLEMENT_PERIOD = EVERY_10_CALENDAR_DAYS
+COMMISSION_BASE = FOOD_SUBTOTAL
+DELIVERY_FEE_BELONGS_TO = COURIER
+```
+
+- Source of truth: `02-aturan-bisnis/businessRules.ts` and `01-dokumentasi/BUSINESS_RULES.md`
+- Money fields are calculated in `03-backend-lokal/src/services/quote.ts`
+- Payment readiness: `03-backend-lokal/src/services/payment/` (CASH live; ONLINE stub until enabled)
+- Clients must not write platformFee, merchantAmount, courierEarning, deliveryFee, or grandTotal
+- Project lives on the Desktop: Food-Delivery-Marketplace
+- Firebase is deferred in `99-firebase-nanti`

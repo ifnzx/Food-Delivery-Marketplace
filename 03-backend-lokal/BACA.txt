@@ -1,0 +1,10 @@
+Folder ini adalah backend yang sedang dipakai untuk uji coba.
+
+Mulai dari:
+1. src/server.ts
+2. src/services/quote.ts   (hitung uang)
+3. src/routes/orders.ts    (alur pesanan)
+4. src/seed.ts             (data contoh)
+5. public/index.html       (halaman review)
+
+Jalankan: npm run dev

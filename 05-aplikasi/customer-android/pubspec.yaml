@@ -1,0 +1,36 @@
+name: antarq_customer
+description: ANTARQ Customer — Android food delivery MVP
+publish_to: "none"
+version: 1.0.0+4
+
+environment:
+  sdk: ^3.12.2
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+  http: ^1.2.2
+  provider: ^6.1.2
+  shared_preferences: ^2.3.3
+  google_fonts: ^6.2.1
+  intl: ^0.20.2
+  geolocator: ^13.0.2
+  latlong2: ^0.9.1
+  webview_flutter: ^4.10.0
+  webview_flutter_android: ^4.14.0
+  image_picker: ^1.1.2
+  flutter_local_notifications: ^18.0.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/logo-antarq.png
+    - assets/logo-antarq-light.png
+    - assets/logo-antarq-black.png
+    - assets/login-hero-customer.png

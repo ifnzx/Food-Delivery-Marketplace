@@ -1,0 +1,2872 @@
+<!DOCTYPE html>
+<html class="light" lang="id">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ANTARQ Kurir</title>
+  <link rel="icon" href="/logo-antarq-mark.svg"/>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+  <script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "surface-container-high": "#eee7e2",
+            "tertiary-fixed-dim": "#87d5c8",
+            "on-tertiary-container": "#f4fffb",
+            "error-container": "#ffdad6",
+            "tertiary-fixed": "#a3f1e4",
+            tertiary: "#09685d",
+            "secondary-fixed": "#e8e1dc",
+            "on-background": "#1d1b18",
+            "on-surface": "#1d1b18",
+            surface: "#ffffff",
+            "on-error-container": "#93000a",
+            "on-surface-variant": "#6B7280",
+            "surface-container-low": "#F3F4F6",
+            background: "#ffffff",
+            "surface-container-lowest": "#ffffff",
+            primary: "#22C55E",
+            ink: "#111111",
+            "secondary-container": "#F3F4F6",
+            "outline-variant": "#E5E7EB",
+            "on-primary": "#ffffff",
+            secondary: "#6B7280",
+            "on-primary-container": "#ffffff",
+            "on-tertiary": "#ffffff",
+            "surface-container": "#F3F4F6",
+            "primary-container": "#16A34A",
+            "primary-fixed": "#DCFCE7",
+            error: "#ba1a1a",
+            "tertiary-container": "#22C55E",
+            "surface-tint": "#15803D",
+            "surface-variant": "#F3F4F6",
+            outline: "#E5E7EB",
+            "surface-container-highest": "#E5E7EB",
+            "on-error": "#ffffff",
+            "primary-fixed-dim": "#86EFAC",
+            "on-tertiary-fixed-variant": "#005048"
+          },
+          spacing: {
+            xl: "32px",
+            "margin-mobile": "16px",
+            xs: "8px",
+            lg: "24px",
+            md: "16px",
+            sm: "12px"
+          },
+          fontFamily: {
+            sans: ["Plus Jakarta Sans", "sans-serif"],
+            "display-lg": ["Plus Jakarta Sans", "sans-serif"],
+            "body-md": ["Plus Jakarta Sans", "sans-serif"],
+            "body-lg": ["Plus Jakarta Sans", "sans-serif"],
+            "headline-sm": ["Plus Jakarta Sans", "sans-serif"],
+            "headline-md": ["Plus Jakarta Sans", "sans-serif"],
+            "label-sm": ["Plus Jakarta Sans", "sans-serif"],
+            "currency-bold": ["Plus Jakarta Sans", "sans-serif"]
+          },
+          fontSize: {
+            "display-lg": ["30px", { lineHeight: "38px", letterSpacing: "-0.02em", fontWeight: "700" }],
+            "body-md": ["14px", { lineHeight: "20px", fontWeight: "400" }],
+            "body-lg": ["16px", { lineHeight: "24px", fontWeight: "400" }],
+            "headline-sm": ["18px", { lineHeight: "24px", fontWeight: "600" }],
+            "headline-md": ["22px", { lineHeight: "28px", fontWeight: "700" }],
+            "label-sm": ["12px", { lineHeight: "16px", letterSpacing: "0.05em", fontWeight: "600" }],
+            "currency-bold": ["16px", { lineHeight: "20px", fontWeight: "700" }]
+          },
+          boxShadow: {
+            "level-1": "0 2px 8px rgba(0, 0, 0, 0.04)",
+            "level-2": "0 4px 16px rgba(0, 0, 0, 0.08)"
+          }
+        }
+      }
+    };
+  </script>
+  <style>
+    body { font-family: "Plus Jakarta Sans", sans-serif; background-color: #f6f7f6; color: #111; }
+    html, body, #app { height: 100%; height: 100dvh; margin: 0; }
+    #app { overflow: auto; }
+    .material-symbols-outlined { font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24; font-size: 22px; line-height: 1; }
+    .pulse-ring {
+      border-radius: 9999px;
+      aspect-ratio: 1 / 1;
+      transform-origin: 50% 50%;
+      pointer-events: none;
+      animation: pulse-ring 1.8s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+    }
+    @keyframes pulse-ring {
+      0% { transform: scale(1); opacity: 0.55; }
+      100% { transform: scale(1.45); opacity: 0; }
+    }
+    .radar-ping {
+      border-radius: 9999px;
+      aspect-ratio: 1 / 1;
+      transform-origin: 50% 50%;
+      pointer-events: none;
+      animation: radar-ping 2.4s cubic-bezier(0.15, 0.7, 0.3, 1) infinite;
+    }
+    @keyframes radar-ping {
+      0% { transform: scale(1); opacity: 0.55; }
+      100% { transform: scale(3.4); opacity: 0; }
+    }
+    .leaflet-container { width: 100%; height: 100%; background: #dce6ef; z-index: 0 !important; }
+    #job-map { z-index: 0; isolation: isolate; }
+    .leaflet-control-zoom, .leaflet-control-attribution { display: none !important; }
+    .dk-rider-wrap { background: none !important; border: 0 !important; }
+    .dk-rider-spin {
+      width: 52px;
+      height: 52px;
+      display: grid;
+      place-items: center;
+      transform-origin: 50% 70%;
+      transition: transform 0.35s linear;
+    }
+    .dk-rider-bob {
+      width: 44px;
+      height: 44px;
+      border-radius: 999px;
+      background: #111;
+      color: #22C55E;
+      display: grid;
+      place-items: center;
+      box-shadow: 0 8px 18px rgba(0, 0, 0, 0.28);
+      animation: dk-rider-bob 0.55s ease-in-out infinite;
+    }
+    .dk-rider-bob .material-symbols-outlined {
+      font-size: 26px;
+      font-variation-settings: "FILL" 1, "wght" 600, "GRAD" 0, "opsz" 24;
+    }
+    @keyframes dk-rider-bob {
+      0%, 100% { transform: translateY(0) rotate(-6deg); }
+      50% { transform: translateY(-4px) rotate(6deg); }
+    }
+    .map-gradient { background: linear-gradient(to bottom, rgba(255,255,255,0) 0%, rgba(255,255,255,1) 100%); }
+    .progress-ring { transform: rotate(-90deg); transform-origin: 50% 50%; transition: stroke-dashoffset 1s linear; }
+    .glass-panel { background: rgba(255,255,255,0.95); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+
+    :root {
+      --check-opacity-dur: 500ms;
+      --check-rotate-dur: 500ms;
+      --check-rotate-from: 80deg;
+      --check-bob-dur: 500ms;
+      --check-y-amount: 8px;
+      --check-blur-dur: 500ms;
+      --check-blur-from: 10px;
+      --check-path-dur: 500ms;
+      --check-path-delay: 80ms;
+      --check-ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+      --check-ease-opacity: cubic-bezier(0.22, 1, 0.36, 1);
+      --check-ease-rotate: cubic-bezier(0.22, 1, 0.36, 1);
+      --check-ease-bob: cubic-bezier(0.34, 1.35, 0.64, 1);
+      --check-ease-path: cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    .pickup-check {
+      position: absolute;
+      inset: 0;
+      z-index: 2;
+      margin: 0;
+      width: 24px;
+      height: 24px;
+      opacity: 0;
+      cursor: pointer;
+    }
+    .t-success-check {
+      display: inline-block;
+      transform-origin: center;
+      opacity: 0;
+      will-change: transform, opacity, filter;
+    }
+    .t-success-check svg { display: block; overflow: visible; }
+    .t-success-check svg path {
+      stroke-dasharray: 28;
+      stroke-dashoffset: 28;
+    }
+    .pickup-check:checked + .t-check-face {
+      border-color: #22C55E;
+      background: #22C55E;
+    }
+    .pickup-check:checked + .t-check-face .t-success-check {
+      animation:
+        t-check-fade var(--check-opacity-dur) var(--check-ease-opacity) forwards,
+        t-check-rotate var(--check-rotate-dur) var(--check-ease-rotate) forwards,
+        t-check-blur var(--check-blur-dur) var(--check-ease-out) forwards,
+        t-check-bob var(--check-bob-dur) var(--check-ease-bob) forwards;
+    }
+    .pickup-check:checked + .t-check-face .t-success-check svg path {
+      animation: t-check-draw var(--check-path-dur) var(--check-ease-path) var(--check-path-delay) forwards;
+    }
+    .pickup-check:not(:checked) + .t-check-face .t-success-check {
+      opacity: 0;
+      animation: none;
+      filter: none;
+      transform: none;
+      translate: 0;
+    }
+    .pickup-check:not(:checked) + .t-check-face .t-success-check svg path {
+      animation: none;
+      stroke-dashoffset: 28;
+    }
+    @keyframes t-check-fade { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes t-check-rotate {
+      from { transform: rotate(var(--check-rotate-from)); }
+      to { transform: rotate(0deg); }
+    }
+    @keyframes t-check-blur {
+      from { filter: blur(var(--check-blur-from)); }
+      to { filter: blur(0); }
+    }
+    @keyframes t-check-bob {
+      from { translate: 0 var(--check-y-amount); }
+      to { translate: 0 0; }
+    }
+    @keyframes t-check-draw { to { stroke-dashoffset: 0; } }
+    /* Full-screen SUCCESS setelah complete tunai */
+    .t-success-overlay {
+      position: fixed; inset: 0; z-index: 90;
+      background: #fff;
+      display: flex; flex-direction: column; align-items: center;
+      padding: 48px 28px 28px;
+      animation: t-success-fadein 280ms ease forwards;
+    }
+    @keyframes t-success-fadein { from { opacity: 0; } to { opacity: 1; } }
+    .t-success-overlay .t-success-check {
+      width: 132px; height: 132px;
+    }
+    .t-success-overlay .t-success-check[data-state="in"] {
+      animation:
+        t-check-fade var(--check-opacity-dur) var(--check-ease-opacity) forwards,
+        t-check-rotate var(--check-rotate-dur) var(--check-ease-rotate) forwards,
+        t-check-blur var(--check-blur-dur) var(--check-ease-out) forwards,
+        t-check-bob var(--check-bob-dur) var(--check-ease-bob) forwards;
+    }
+    .t-success-overlay .t-success-check[data-state="in"] svg path {
+      stroke-dasharray: 120;
+      stroke-dashoffset: 120;
+      animation: t-check-draw-lg var(--check-path-dur) var(--check-ease-path) var(--check-path-delay) forwards;
+    }
+    @keyframes t-check-draw-lg { to { stroke-dashoffset: 0; } }
+    .t-success-overlay h1 {
+      margin-top: 28px;
+      font-size: 28px; font-weight: 800; letter-spacing: 1.2px;
+      color: #1F2937; text-align: center;
+    }
+    .t-success-overlay p.msg {
+      margin-top: 12px; max-width: 320px;
+      font-size: 15px; line-height: 1.45; font-weight: 500;
+      color: #9CA3AF; text-align: center;
+    }
+    .t-success-overlay .amt {
+      margin-top: 18px; font-size: 20px; font-weight: 800; color: #16A34A;
+    }
+    .t-success-overlay .done-btn {
+      margin-top: auto; width: 100%; max-width: 420px; height: 54px;
+      border: 0; border-radius: 14px; background: #16A34A; color: #fff;
+      font-weight: 800; font-size: 16px; letter-spacing: 1.1px; cursor: pointer;
+    }
+    .glass-card { background: rgba(255,255,255,0.95); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2); box-shadow: 0 4px 16px rgba(0,0,0,0.04); }
+    .hide-scrollbar::-webkit-scrollbar, .no-scrollbar::-webkit-scrollbar { display: none; }
+    .hide-scrollbar, .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    @keyframes chat-badge-pop { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.12); } }
+    #chat-badge:not(.hidden) { animation: chat-badge-pop 1.4s ease-in-out infinite; }
+    .dk-online-dot {
+      position: relative;
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: #22C55E;
+      box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.55);
+      animation: dk-online-dot 1.6s ease-out infinite;
+    }
+    .dk-online-dot::after {
+      content: "";
+      position: absolute;
+      inset: -5px;
+      border-radius: 999px;
+      border: 2px solid rgba(34, 197, 94, 0.7);
+      animation: dk-online-ring 1.6s ease-out infinite;
+    }
+    .dk-online-chip {
+      animation: dk-online-chip 2.4s ease-in-out infinite;
+    }
+    @keyframes dk-online-dot {
+      0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.55); }
+      70% { box-shadow: 0 0 0 8px rgba(34, 197, 94, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+    }
+    @keyframes dk-online-ring {
+      0% { transform: scale(0.55); opacity: 0.9; }
+      100% { transform: scale(1.7); opacity: 0; }
+    }
+    @keyframes dk-online-chip {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+      50% { box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.16); }
+    }
+    .input-group { position: relative; }
+    .input-field {
+      width: 100%; height: 56px; padding: 20px 48px 8px 16px; border-radius: 12px;
+      border: 1px solid #727784; background: #fff; font-family: inherit; font-size: 16px; color: #1d1b18; outline: none;
+    }
+    .input-field:focus { border-color: #22C55E; box-shadow: 0 0 0 1px #22C55E; }
+    .input-label {
+      position: absolute; left: 16px; top: 18px; font-size: 16px; color: #6B7280; pointer-events: none; transition: all 0.2s ease-out;
+    }
+    .input-field:focus ~ .input-label, .input-field:not(:placeholder-shown) ~ .input-label {
+      top: 8px; font-size: 12px; color: #22C55E; font-weight: 600;
+    }
+    .dk-nav {
+      position: fixed; left: 50%; bottom: 22px; z-index: 50; width: min(84vw, 380px);
+      transform: translateX(-50%);
+      box-sizing: border-box;
+      transition: opacity .28s ease, transform .28s cubic-bezier(.22,1,.36,1);
+    }
+    #nav-root.is-off .dk-nav {
+      opacity: 0; pointer-events: none; transform: translateX(-50%) translateY(16px);
+    }
+    .dk-nav-bar {
+      position: relative; height: 72px; border-radius: 999px;
+      background: rgba(255, 255, 255, 0.82);
+      backdrop-filter: blur(22px) saturate(160%);
+      -webkit-backdrop-filter: blur(22px) saturate(160%);
+      box-shadow:
+        0 10px 32px rgba(0, 0, 0, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.85);
+      border: 1px solid rgba(255, 255, 255, 0.72);
+      display: grid; grid-template-columns: repeat(4, 1fr); align-items: center; padding: 0 8px;
+      overflow: hidden; box-sizing: border-box;
+    }
+    .dk-nav-thumb {
+      position: absolute; top: 10px; left: 8px; width: calc((100% - 16px) / 4); height: 52px;
+      border-radius: 999px;
+      background: rgba(34, 197, 94, 0.16);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45);
+      pointer-events: none;
+      transition: transform .42s cubic-bezier(.22,1,.36,1); box-sizing: border-box;
+      will-change: transform;
+    }
+    .dk-nav-item {
+      position: relative; z-index: 1; display: flex; align-items: center; justify-content: center;
+      height: 52px; color: rgba(17, 17, 17, 0.42); border-radius: 999px;
+      transition: color .28s ease;
+    }
+    .dk-nav-item.is-on { color: #16A34A; }
+    .dk-nav-item .material-symbols-outlined {
+      display: block;
+      width: 24px;
+      height: 24px;
+      font-size: 24px;
+      transition: transform .28s cubic-bezier(.22,1,.36,1);
+    }
+    .dk-nav-item.is-on .material-symbols-outlined { transform: scale(1.12); }
+    .dk-nav-item::after {
+      content: ""; position: absolute; bottom: 6px; left: 50%; width: 5px; height: 5px; margin-left: -2.5px;
+      border-radius: 999px; background: #22C55E;
+      opacity: 0; transform: scale(.5);
+      transition: opacity .28s ease, transform .28s cubic-bezier(.22,1,.36,1);
+    }
+    .dk-nav-item.is-on::after { opacity: 1; transform: scale(1); }
+    .input-field:not(:placeholder-shown):not(:focus) ~ .input-label { color: #424752; }
+    #app > * { animation: pageFade .22s ease both; }
+    @keyframes pageFade { from { opacity: .35; } to { opacity: 1; } }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(14px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes popIn {
+      0% { opacity: 0; transform: scale(.86); }
+      70% { transform: scale(1.06); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+    @keyframes floatY {
+      0%, 100% { transform: translateY(0) rotate(-6deg); }
+      50% { transform: translateY(-10px) rotate(4deg); }
+    }
+    @keyframes floatY2 {
+      0%, 100% { transform: translateY(0) rotate(8deg); }
+      50% { transform: translateY(-8px) rotate(-4deg); }
+    }
+    @keyframes scooter {
+      0%, 100% { transform: translate(0, 0) rotate(-8deg); }
+      50% { transform: translate(-8px, -12px) rotate(4deg); }
+    }
+    @keyframes shimmer {
+      0% { background-position: -40% 0; }
+      100% { background-position: 140% 0; }
+    }
+    @keyframes pulseSoft {
+      0%, 100% { box-shadow: 0 8px 24px rgba(34,197,94,.28); }
+      50% { box-shadow: 0 12px 32px rgba(34,197,94,.45); }
+    }
+    @keyframes wiggle {
+      0%, 100% { transform: rotate(0); }
+      25% { transform: rotate(-10deg); }
+      75% { transform: rotate(10deg); }
+    }
+    @keyframes blob {
+      0%, 100% { transform: scale(1) translate(0, 0); }
+      50% { transform: scale(1.12) translate(8px, -6px); }
+    }
+    .anim-up { animation: fadeUp .55s cubic-bezier(.22,1,.36,1) both; }
+    .anim-pop { animation: popIn .45s cubic-bezier(.22,1,.36,1) both; }
+    .d1 { animation-delay: .05s; } .d2 { animation-delay: .1s; } .d3 { animation-delay: .16s; }
+    .d4 { animation-delay: .22s; } .d5 { animation-delay: .28s; } .d6 { animation-delay: .34s; }
+    .press { transition: transform .16s ease, box-shadow .16s ease; }
+    .press:active { transform: scale(.92); }
+    .icon-bounce:hover .material-symbols-outlined { animation: wiggle .45s ease; }
+    .card-lift { transition: transform .25s ease, box-shadow .25s ease; }
+    .card-lift:hover, .card-lift:active { transform: translateY(-3px); box-shadow: 0 12px 28px rgba(0,0,0,.08); }
+    .hero-shimmer {
+      background: linear-gradient(110deg, #22C55E 0%, #4ADE80 35%, #16A34A 50%, #22C55E 70%);
+      background-size: 220% 100%;
+      animation: shimmer 4.5s ease-in-out infinite, pulseSoft 2.8s ease-in-out infinite;
+    }
+    .blob { position: absolute; border-radius: 999px; filter: blur(2px); animation: blob 5s ease-in-out infinite; }
+    .login-page {
+      background:
+        radial-gradient(90% 70% at 78% 8%, #DBEAFE 0%, transparent 58%),
+        radial-gradient(80% 55% at 8% 92%, #DCFCE7 0%, transparent 52%),
+        radial-gradient(45% 35% at 92% 78%, #FEF9C3 0%, transparent 50%),
+        #FFFFFF;
+    }
+    .login-hero {
+      position: relative;
+      height: 300px;
+      display: grid;
+      place-items: center;
+      background: transparent;
+      box-shadow: none;
+      overflow: visible;
+    }
+    .login-hero img {
+      width: auto;
+      max-width: 94%;
+      height: 280px;
+      object-fit: contain;
+      display: block;
+      margin: 0 auto;
+      animation: loginRide 3.6s ease-in-out infinite;
+    }
+    @keyframes loginRide {
+      0%, 100% { transform: translate(0, 0); }
+      50% { transform: translate(8px, -10px); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .anim-up, .anim-pop, .hero-shimmer, .blob, #chat-badge:not(.hidden), .pulse-ring, .radar-ping, .dk-online-dot, .dk-online-dot::after, .dk-online-chip, #app > *, .t-success-check, .t-success-check svg path, .dk-rider-bob, .t-success-overlay, .login-hero img { animation: none !important; }
+      .t-success-check { opacity: 1; }
+      .pickup-check:checked + .t-check-face .t-success-check svg path,
+      .t-success-overlay .t-success-check svg path { stroke-dashoffset: 0 !important; }
+      .dk-nav-thumb { transition: none; }
+    }
+
+    /* Boot splash — hijau polos, logo hitam, kredit Brynx */
+    #dk-splash {
+      position: fixed; inset: 0; z-index: 9999;
+      display: grid; place-items: center;
+      background: #22C55E;
+      color: #fff; padding: 28px 32px 36px;
+      transition: opacity 0.35s ease, visibility 0.35s ease;
+    }
+    #dk-splash.is-leave { opacity: 0; visibility: hidden; pointer-events: none; }
+    #dk-splash .dk-splash-mark {
+      background: transparent; border: 0; padding: 0; box-shadow: none;
+      margin-top: -8vh;
+      display: flex; flex-direction: column; align-items: center; gap: 14px;
+      animation: dk-splash-rise 0.65s cubic-bezier(0.22, 1, 0.36, 1) both;
+    }
+    #dk-splash .dk-splash-mark img {
+      height: 72px; width: auto; max-width: min(360px, 78vw); display: block;
+    }
+    #dk-splash .dk-splash-line {
+      margin: 0; font-size: 16px; font-weight: 800;
+      letter-spacing: -0.02em; text-align: center;
+      background: linear-gradient(90deg, #fff 0%, #a7f3d0 20%, #34d399 40%, #fff 60%, #6ee7b7 80%, #fff 100%);
+      background-size: 200% auto;
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+      animation: dk-orbit 2.8s linear infinite;
+    }
+    #dk-splash .dk-splash-credit {
+      position: absolute; left: 0; right: 0; bottom: 36px;
+      margin: 0; text-align: center;
+      font-size: 15px; font-weight: 700; letter-spacing: -0.02em; color: #fff;
+    }
+    @keyframes dk-splash-rise {
+      from { opacity: 0; transform: scale(0.92); }
+      to   { opacity: 1; transform: scale(1); }
+    }
+    @keyframes dk-orbit {
+      0%   { background-position: 200% center; }
+      100% { background-position: -200% center; }
+    }
+  </style>
+</head>
+<body class="min-h-screen bg-surface font-body-md text-on-background antialiased">
+  <div id="dk-splash" aria-live="polite" aria-busy="true">
+    <div class="dk-splash-mark">
+      <img src="/logo-antarq-black.png" alt="ANTARQ"/>
+      <p class="dk-splash-line">Siap antar, siap dapat ongkir</p>
+    </div>
+    <p class="dk-splash-credit">from Brynx Solution company</p>
+  </div>
+  <div id="app"></div>
+  <div id="nav-root" class="is-off"></div>
+  <div id="success-root"></div>
+  <script>
+    function paintStandaloneLogin(msg) {
+      loginErr = msg || "";
+      authView = "login";
+      bindAuthPages();
+    }
+    let token = "";
+    let user = null;
+    try {
+      token = localStorage.getItem("dk_courier_token") || "";
+      user = JSON.parse(localStorage.getItem("dk_courier_user") || "null");
+    } catch (_) {
+      token = "";
+      user = null;
+    }
+    function avatarHtml(name, size) {
+      const cls = size === "lg"
+        ? "w-20 h-20 text-2xl border-2 border-primary"
+        : "w-10 h-10 text-sm border-2 border-primary";
+      return `<div class="${cls} rounded-full overflow-hidden bg-primary-fixed text-primary font-bold grid place-items-center shrink-0">${esc(initials(name))}</div>`;
+    }
+    let profile = null;
+    let watchId = null;
+    let lastGps = null;
+    let jobNav = null;
+    let mapsKey = "";
+    let pollTimer = null;
+    let offerTimer = null;
+    let chatTimer = null;
+    let routeGen = 0;
+    let lastProfileAt = 0;
+    let lastHomeSig = "";
+    let lastGpsPostAt = 0;
+    let showPass = false;
+    let loginErr = "";
+    let authView = "login";
+    let ktpDataUrl = "";
+    let ktpDraft = {
+      nik: "",
+      fullName: "",
+      placeOfBirth: "",
+      dateOfBirth: "",
+      address: "",
+      fullNameFromOcr: "",
+      ocrConfidence: 0,
+    };
+    let ktpOcrLoading = false;
+    let ktpOcrNote = "";
+    let ktpMismatches = [];
+    let pendingMsg = "";
+    let draftReg = { fullName: "", phone: "", email: "", password: "" };
+    let editingCourierProfile = false;
+    let showCourierLocationPanel = false;
+    let showCourierPriorityPanel = false;
+    let helpError = "";
+    let helpMessage = "";
+    let helpBusy = false;
+    let courierProfileError = "";
+
+    function icon(name, cls, fill) {
+      return `<span class="material-symbols-outlined ${cls || ""}" style="font-variation-settings:'FILL' ${fill ? 1 : 0}">${name}</span>`;
+    }
+    function rupiah(n) {
+      return "Rp" + Number(n || 0).toLocaleString("id-ID");
+    }
+    function esc(s) {
+      return String(s || "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+    }
+    function go(hash) {
+      const next = hash.startsWith("#") ? hash : "#" + hash;
+      if ((location.hash || "") !== next) location.hash = next;
+      return route();
+    }
+
+    function showSuccessOverlay({ title, message, amountLabel, onDone }) {
+      const root = document.getElementById("success-root");
+      if (!root) {
+        onDone?.();
+        return;
+      }
+      root.innerHTML = `
+        <div class="t-success-overlay" role="dialog" aria-label="${esc(title || "Berhasil")}">
+          <span class="t-success-check" data-state="out" aria-hidden="true">
+            <svg viewBox="0 0 48 48" fill="none" width="132" height="132">
+              <path d="M24 6a18 18 0 1 1 0 36 18 18 0 0 1 0-36Z" stroke="#16A34A" stroke-width="3.5" stroke-linecap="round"/>
+              <path d="M15 24.5 21.5 31 33.5 17" stroke="#16A34A" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </span>
+          <h1>${esc(title || "BERHASIL!")}</h1>
+          <p class="msg">${esc(message || "")}</p>
+          ${amountLabel ? `<div class="amt">${esc(amountLabel)}</div>` : ""}
+          <button type="button" class="done-btn press" id="success-done">SELESAI</button>
+        </div>`;
+      const mark = root.querySelector(".t-success-check");
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          if (mark) mark.setAttribute("data-state", "in");
+        });
+      });
+      try { navigator.vibrate?.([18, 40, 28]); } catch (_) {}
+      document.getElementById("success-done")?.addEventListener("click", () => {
+        root.innerHTML = "";
+        onDone?.();
+      });
+    }
+    async function api(path, options = {}) {
+      const ctrl = new AbortController();
+      const timeoutMs = Number(options.timeoutMs) || 7000;
+      const timer = setTimeout(() => ctrl.abort(), timeoutMs);
+      const { timeoutMs: _ignored, ...fetchOpts } = options;
+      try {
+        const res = await fetch(path, {
+          ...fetchOpts,
+          signal: ctrl.signal,
+          headers: {
+            "Content-Type": "application/json",
+            ...(token ? { Authorization: "Bearer " + token } : {}),
+            ...(fetchOpts.headers || {}),
+          },
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data.error || "Request gagal");
+        return data;
+      } catch (err) {
+        if (err && err.name === "AbortError") throw new Error("Server lambat atau tidak merespons");
+        throw err;
+      } finally {
+        clearTimeout(timer);
+      }
+    }
+    function merchantName(order) {
+      return order.merchants?.[0]?.merchant?.name || "Warung";
+    }
+    function merchantAddr(order) {
+      return order.merchants?.[0]?.merchant?.address || "";
+    }
+    function customerName(order) {
+      return order.customer?.fullName || "Pelanggan";
+    }
+    function items(order) {
+      return order.items || [];
+    }
+    function qty(order) {
+      return items(order).reduce((s, i) => s + Number(i.qty || 0), 0);
+    }
+    function initials(name) {
+      const parts = String(name || "P").trim().split(/\s+/).filter(Boolean);
+      return ((parts[0]?.[0] || "P") + (parts[1]?.[0] || "")).toUpperCase();
+    }
+    function formatChatTime(iso) {
+      const d = new Date(iso);
+      if (Number.isNaN(d.getTime())) return "";
+      return d.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" });
+    }
+    function chatReadKey(orderId, role) {
+      return "dk_chat_read_" + role + "_" + orderId;
+    }
+    function unreadChatCount(messages, meRole, orderId) {
+      const last = localStorage.getItem(chatReadKey(orderId, meRole)) || "";
+      const list = messages || [];
+      if (!last) return list.filter((m) => m.senderRole !== meRole).length;
+      const idx = list.findIndex((m) => m.id === last);
+      if (idx < 0) return list.filter((m) => m.senderRole !== meRole).length;
+      return list.slice(idx + 1).filter((m) => m.senderRole !== meRole).length;
+    }
+    function markChatRead(orderId, meRole, messages) {
+      const last = (messages || [])[(messages || []).length - 1];
+      if (last?.id) localStorage.setItem(chatReadKey(orderId, meRole), last.id);
+    }
+    function paintChatBadge(n) {
+      const btn = document.getElementById("open-chat");
+      const badge = document.getElementById("chat-badge");
+      const label = document.getElementById("chat-label");
+      if (!btn || !badge) return;
+      if (n > 0) {
+        badge.textContent = n > 9 ? "9+" : String(n);
+        badge.classList.remove("hidden");
+        if (label) label.textContent = "Pesan baru";
+        btn.setAttribute("aria-label", "Chat, " + n + " pesan baru");
+      } else {
+        badge.classList.add("hidden");
+        if (label) label.textContent = "Chat";
+        btn.setAttribute("aria-label", "Chat");
+      }
+    }
+    function chatOverlayHtml(peerName) {
+      const initial = String(peerName || "P").trim().charAt(0).toUpperCase();
+      return `
+        <div id="order-chat" class="hidden absolute inset-0 z-[80] bg-[#F7F7F7] flex flex-col">
+          <header class="h-[64px] px-2 flex items-center gap-2 bg-[#EFEFEF] shrink-0">
+            <button type="button" id="chat-close" class="w-10 h-10 rounded-full grid place-items-center shrink-0 text-[#111]">${icon("arrow_back")}</button>
+            <div class="w-10 h-10 rounded-full bg-primary-fixed text-primary font-bold grid place-items-center shrink-0">${esc(initial)}</div>
+            <div class="min-w-0 flex-1">
+              <p class="font-bold truncate leading-tight text-[16px] text-[#111]">${esc(peerName || "Pelanggan")}</p>
+              <p class="text-[12px] text-[#8E8E93] leading-tight">Online</p>
+            </div>
+          </header>
+          <div id="chat-list" class="flex-1 overflow-y-auto px-4 py-3 space-y-3 bg-[#F7F7F7]"></div>
+          <div id="chat-chips" class="hidden px-3 pt-2 pb-1 gap-2 overflow-x-auto hide-scrollbar shrink-0 bg-white"></div>
+          <form id="chat-form" class="px-3 py-2.5 flex items-center gap-2 bg-white shrink-0">
+            <button type="button" id="chat-plus" class="w-10 h-10 rounded-full grid place-items-center text-[#8E8E93] shrink-0" aria-label="Lainnya"><span class="material-symbols-outlined">add</span></button>
+            <div class="relative flex-1 min-w-0">
+              <input id="chat-input" maxlength="500" autocomplete="off" class="w-full h-11 rounded-[22px] bg-white border border-[#E5E5EA] pl-4 pr-11 text-[15px] outline-none focus:border-primary" placeholder="Pesan"/>
+              <button type="submit" id="chat-send" class="hidden absolute right-1 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-primary text-white grid place-items-center" aria-label="Kirim"><span class="material-symbols-outlined text-[20px]">send</span></button>
+            </div>
+            <button type="button" id="chat-cam" class="w-10 h-10 rounded-full grid place-items-center text-[#8E8E93] shrink-0" aria-label="Kamera"><span class="material-symbols-outlined">photo_camera</span></button>
+            <input id="chat-photo" type="file" accept="image/*" capture="environment" class="hidden"/>
+          </form>
+        </div>`;
+    }
+    function chatImageSrc(body) {
+      const raw = String(body || "").trim();
+      if (!raw.startsWith("IMG:")) return null;
+      const src = raw.slice(4);
+      if (!/^data:image\/(jpeg|png|webp|gif);base64,[A-Za-z0-9+/]+=*$/.test(src)) return null;
+      return src;
+    }
+    function chatBubbleInner(body, mine) {
+      const src = chatImageSrc(body);
+      if (src) {
+        return `<img src="${src}" alt="Foto" class="block max-w-[220px] max-h-[280px] w-auto h-auto rounded-[14px] object-cover"/>`;
+      }
+      return `<div class="px-3.5 py-2.5 text-[15px] leading-snug whitespace-pre-wrap ${
+        mine
+          ? "bg-primary text-white rounded-[18px] rounded-br-md"
+          : "bg-[#E9E9EB] text-[#111] rounded-[18px] rounded-bl-md"
+      }">${esc(body)}</div>`;
+    }
+    function compressChatImage(file) {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        const url = URL.createObjectURL(file);
+        img.onload = () => {
+          const max = 720;
+          let w = img.width;
+          let h = img.height;
+          if (w > max || h > max) {
+            const scale = Math.min(max / w, max / h);
+            w = Math.round(w * scale);
+            h = Math.round(h * scale);
+          }
+          const canvas = document.createElement("canvas");
+          canvas.width = w;
+          canvas.height = h;
+          canvas.getContext("2d").drawImage(img, 0, 0, w, h);
+          URL.revokeObjectURL(url);
+          resolve(canvas.toDataURL("image/jpeg", 0.7));
+        };
+        img.onerror = () => {
+          URL.revokeObjectURL(url);
+          reject(new Error("Gagal baca foto"));
+        };
+        img.src = url;
+      });
+    }
+    function chatDayLabel(iso) {
+      const d = new Date(iso);
+      if (Number.isNaN(d.getTime())) return "";
+      const now = new Date();
+      if (d.toDateString() === now.toDateString()) return "Hari ini";
+      return d.toLocaleDateString("id-ID", { day: "numeric", month: "short" });
+    }
+    function renderChatMessages(listEl, messages, meRole) {
+      if (!listEl) return;
+      const atBottom = listEl.scrollHeight - listEl.scrollTop - listEl.clientHeight < 80;
+      const list = messages || [];
+      if (!list.length) {
+        listEl.innerHTML = `<p class="text-center text-sm text-[#8E8E93] pt-10">Belum ada pesan.</p>`;
+        return;
+      }
+      let lastDay = "";
+      listEl.innerHTML = list.map((m) => {
+        const mine = m.senderRole === meRole;
+        const day = chatDayLabel(m.createdAt);
+        const dayChip = day && day !== lastDay
+          ? `<div class="flex justify-center py-1"><span class="text-[11px] text-[#8E8E93] bg-[#E8E8ED] px-3 py-1 rounded-full">${esc(day)}</span></div>`
+          : "";
+        lastDay = day;
+        return `
+          ${dayChip}
+          <div class="flex ${mine ? "justify-end" : "justify-start"}">
+            <div class="max-w-[78%] flex flex-col ${mine ? "items-end" : "items-start"}">
+              ${chatBubbleInner(m.body, mine)}
+              <p class="text-[11px] text-[#8E8E93] mt-1 px-1">${esc(formatChatTime(m.createdAt))}</p>
+            </div>
+          </div>`;
+      }).join("");
+      if (atBottom || !messages?.length) listEl.scrollTop = listEl.scrollHeight;
+    }
+    function bindOrderChat(order, meRole, peerName, chips) {
+      const overlay = document.getElementById("order-chat");
+      const listEl = document.getElementById("chat-list");
+      const form = document.getElementById("chat-form");
+      const input = document.getElementById("chat-input");
+      const chipsEl = document.getElementById("chat-chips");
+      if (!overlay || !form || !input) return;
+      if (chipsEl) {
+        chipsEl.innerHTML = (chips || []).map((t) =>
+          `<button type="button" data-chip="${esc(t)}" class="shrink-0 h-8 px-3 rounded-full bg-[#f6f3f5] text-[12px] font-semibold">${esc(t)}</button>`
+        ).join("");
+      }
+      let me = meRole;
+      const chatOpen = () => !overlay.classList.contains("hidden");
+      const refreshChat = async () => {
+        try {
+          const data = await api("/api/orders/" + encodeURIComponent(order.id) + "/chat");
+          me = data.me || meRole;
+          if (chatOpen()) {
+            renderChatMessages(listEl, data.messages, me);
+            markChatRead(order.id, me, data.messages);
+            paintChatBadge(0);
+          } else {
+            paintChatBadge(unreadChatCount(data.messages, me, order.id));
+          }
+        } catch (_) {}
+      };
+      const openChat = () => {
+        overlay.classList.remove("hidden");
+        refreshChat();
+        setTimeout(() => input.focus(), 50);
+      };
+      const openBtn = document.getElementById("open-chat");
+      if (openBtn) openBtn.onclick = openChat;
+      if (!overlay.dataset.bound) {
+        overlay.dataset.bound = "1";
+        const syncComposer = () => {
+          const has = String(input.value || "").trim().length > 0;
+          document.getElementById("chat-send")?.classList.toggle("hidden", !has);
+        };
+        input.addEventListener("input", syncComposer);
+        document.getElementById("chat-close")?.addEventListener("click", () => {
+          overlay.classList.add("hidden");
+          refreshChat();
+        });
+        document.getElementById("chat-plus")?.addEventListener("click", (e) => {
+          e.preventDefault();
+          if (!chipsEl) return;
+          const show = chipsEl.classList.contains("hidden");
+          chipsEl.classList.toggle("hidden", !show);
+          chipsEl.classList.toggle("flex", show);
+        });
+        const photoInput = document.getElementById("chat-photo");
+        document.getElementById("chat-cam")?.addEventListener("click", () => photoInput?.click());
+        photoInput?.addEventListener("change", async () => {
+          const file = photoInput.files && photoInput.files[0];
+          photoInput.value = "";
+          if (!file) return;
+          if (!String(file.type || "").startsWith("image/")) {
+            alert("Pilih foto.");
+            return;
+          }
+          try {
+            const dataUrl = await compressChatImage(file);
+            await api("/api/orders/" + encodeURIComponent(order.id) + "/chat", {
+              method: "POST",
+              body: JSON.stringify({ body: "IMG:" + dataUrl }),
+            });
+            await refreshChat();
+          } catch (err) {
+            alert(err.message || "Gagal kirim foto");
+          }
+        });
+        chipsEl?.addEventListener("click", (e) => {
+          const btn = e.target.closest("[data-chip]");
+          if (!btn) return;
+          input.value = btn.getAttribute("data-chip") || "";
+          input.dispatchEvent(new Event("input"));
+          input.focus();
+        });
+        form.addEventListener("submit", async (e) => {
+          e.preventDefault();
+          const body = String(input.value || "").trim();
+          if (!body) return;
+          input.value = "";
+          input.dispatchEvent(new Event("input"));
+          try {
+            await api("/api/orders/" + encodeURIComponent(order.id) + "/chat", {
+              method: "POST",
+              body: JSON.stringify({ body }),
+            });
+            await refreshChat();
+          } catch (err) {
+            alert(err.message || "Gagal kirim pesan");
+          }
+        });
+      }
+      refreshChat();
+      if (chatTimer) clearInterval(chatTimer);
+      chatTimer = setInterval(refreshChat, 2500);
+    }
+    function isActive(s) {
+      return !["COMPLETED", "CANCELLED"].includes(s);
+    }
+    function goingOutlet(s) {
+      return [
+        "OUTLET_ACCEPTED",
+        "PREPARING",
+        "READY_FOR_PICKUP",
+        "COURIER_ASSIGNED",
+        "COURIER_GOING_TO_OUTLET",
+      ].includes(s);
+    }
+    function foodReady(order) {
+      const live = (order.merchants || []).filter((m) => m.status !== "REJECTED");
+      return live.length > 0 && live.every((m) => m.status === "READY" || m.status === "COMPLETED");
+    }
+
+    function paintNav(active) {
+      const itemsNav = [
+        ["#/home", "home", "Beranda"],
+        ["#/orders", "list_alt", "Order"],
+        ["#/earnings", "payments", "Pendapatan"],
+        ["#/account", "person", "Akun"],
+      ];
+      const root = document.getElementById("nav-root");
+      if (!root) return;
+      if (!root.querySelector(".dk-nav")) {
+        root.innerHTML = `
+          <nav class="dk-nav" aria-label="Menu utama">
+            <div class="dk-nav-bar">
+              <span class="dk-nav-thumb"></span>
+              ${itemsNav.map(([href, ic, label]) => `
+                <a href="${href}" aria-label="${label}" class="dk-nav-item">${icon(ic, "", false)}</a>`).join("")}
+            </div>
+          </nav>`;
+      }
+      const idx = itemsNav.findIndex(([href]) => href === active);
+      const show = idx >= 0;
+      root.classList.toggle("is-off", !show);
+      const thumb = root.querySelector(".dk-nav-thumb");
+      if (thumb && show) thumb.style.transform = "translateX(" + idx * 100 + "%)";
+      root.querySelectorAll(".dk-nav-item").forEach((a, i) => {
+        const on = show && i === idx;
+        a.classList.toggle("is-on", on);
+        const ic = a.querySelector(".material-symbols-outlined");
+        if (ic) ic.style.fontVariationSettings = "'FILL' " + (on ? 1 : 0);
+      });
+    }
+
+    function formatPriorityCountdown(untilIso) {
+      if (!untilIso) return "";
+      const left = new Date(untilIso).getTime() - Date.now();
+      if (!Number.isFinite(left) || left <= 0) return "";
+      const totalSec = Math.floor(left / 1000);
+      const d = Math.floor(totalSec / 86400);
+      const h = Math.floor((totalSec % 86400) / 3600);
+      const m = Math.floor((totalSec % 3600) / 60);
+      const s = totalSec % 60;
+      const mm = String(m).padStart(2, "0");
+      const ss = String(s).padStart(2, "0");
+      const tail = mm + "m " + ss + "s";
+      if (d > 0) return d + "h " + h + "j " + tail;
+      if (h > 0) return h + "j " + tail;
+      return tail;
+    }
+
+    let priorityTickTimer = null;
+    function stopPriorityTick() {
+      if (priorityTickTimer) {
+        clearInterval(priorityTickTimer);
+        priorityTickTimer = null;
+      }
+    }
+    function startPriorityTick() {
+      stopPriorityTick();
+      const tick = () => {
+        const chip = document.getElementById("priority-chip");
+        const cd = document.getElementById("priority-countdown");
+        const until = profile?.priorityUntil || chip?.getAttribute("data-until");
+        if (!until || !isPriorityStillActive(until)) {
+          stopPriorityTick();
+          if (profile) {
+            profile.priorityActive = false;
+            profile.priorityUntil = null;
+          }
+          if (chip) chip.remove();
+          return;
+        }
+        if (cd) cd.textContent = formatPriorityCountdown(until);
+      };
+      tick();
+      priorityTickTimer = setInterval(tick, 1000);
+    }
+    function isPriorityStillActive(untilIso) {
+      if (!untilIso) return false;
+      const t = new Date(untilIso).getTime();
+      return Number.isFinite(t) && t > Date.now();
+    }
+
+    function headerBar(online) {
+      const name = profile?.fullName || user?.displayName || "Kurir";
+      const hour = new Date().getHours();
+      const hail = hour < 11 ? "Selamat pagi" : hour < 15 ? "Selamat siang" : hour < 18 ? "Selamat sore" : "Selamat malam";
+      const until = profile?.priorityUntil || null;
+      const priorityOn = !!profile?.priorityActive && isPriorityStillActive(until);
+      if (profile && profile.priorityActive && !priorityOn) {
+        profile.priorityActive = false;
+      }
+      const cd = priorityOn ? formatPriorityCountdown(until) : "";
+      const priorityChip = priorityOn
+        ? `<span id="priority-chip" data-until="${esc(until)}" class="shrink-0 min-h-8 px-2 py-1 rounded-full text-[11px] font-bold inline-flex items-center gap-1 bg-amber-100 text-amber-800 border border-amber-200/80 tabular-nums" title="Prioritas aktif sampai ${esc(new Date(until).toLocaleString("id-ID"))}">
+            <span class="material-symbols-outlined text-[15px] shrink-0" style="font-variation-settings:'FILL' 1">workspace_premium</span>
+            <span id="priority-countdown" class="whitespace-nowrap">${cd}</span>
+          </span>`
+        : "";
+      // Jadwalkan tick setelah DOM terpasang
+      setTimeout(() => (priorityOn ? startPriorityTick() : stopPriorityTick()), 0);
+      return `
+        <header class="sticky top-0 z-40 bg-[#f6f7f6]/90 backdrop-blur-md px-4 pt-4 pb-3">
+          <div class="max-w-lg mx-auto flex items-center justify-between gap-3">
+            <div class="min-w-0">
+              <p class="text-[12px] text-secondary">${hail}</p>
+              <p class="font-bold text-[20px] leading-tight truncate">${esc(name)}</p>
+            </div>
+            <div class="shrink-0 flex items-center gap-2">
+              ${priorityChip}
+              <span class="h-8 px-3 rounded-full text-[12px] font-bold inline-flex items-center gap-1.5 ${online ? "bg-primary-fixed text-primary dk-online-chip" : "bg-[#E5E7EB] text-secondary"}">
+                <span class="${online ? "dk-online-dot" : "w-2 h-2 rounded-full bg-secondary"}"></span>
+                ${online ? "Online" : "Istirahat"}
+              </span>
+            </div>
+          </div>
+        </header>`;
+    }
+
+    function floatField(name, type, value, label, extra, required = true) {
+      return `
+        <div class="input-group">
+          <input name="${name}" id="${name === "password" ? "pw" : name}" type="${type}" value="${esc(value)}" placeholder=" " ${required ? "required" : ""} class="input-field ${extra || ""}" autocomplete="${name === "password" ? "current-password" : name === "email" ? "email" : "on"}"/>
+          <label class="input-label" for="${name === "password" ? "pw" : name}">${label}</label>
+        </div>`;
+    }
+
+    function ktpVerifyBlock() {
+      if (!ktpDataUrl && !ktpOcrLoading) return "";
+      const mismatchName = ktpMismatches.includes("fullName");
+      const mismatchNik = ktpMismatches.includes("nik");
+      return `
+        <div class="rounded-xl border border-outline bg-surface-container-low p-sm flex flex-col gap-md">
+          <div>
+            <p class="font-headline-sm text-headline-sm">Verifikasi data KTP</p>
+            <p class="font-body-md text-body-md text-on-surface-variant mt-1">Sistem membaca NIK dan biodata dari foto. Periksa lalu koreksi jika ada yang tidak cocok.</p>
+          </div>
+          ${ktpOcrLoading ? `<p class="font-body-md text-primary">Membaca foto KTP…</p>` : ""}
+          ${ktpOcrNote ? `<p class="font-body-md ${ktpMismatches.length ? "text-warning" : "text-on-surface-variant"}">${esc(ktpOcrNote)}</p>` : ""}
+          ${ktpMismatches.length ? `<p class="font-body-md text-error">Ada data tidak cocok — sesuaikan sebelum kirim.</p>` : ""}
+          ${floatField("ktpNik", "text", ktpDraft.nik, "NIK (16 digit)", mismatchNik ? "border-error" : "", true)}
+          ${floatField("ktpFullName", "text", ktpDraft.fullName, "Nama sesuai KTP", mismatchName ? "border-error" : "", true)}
+          ${floatField("ktpPlace", "text", ktpDraft.placeOfBirth, "Tempat lahir", "", false)}
+          ${floatField("ktpDob", "text", ktpDraft.dateOfBirth, "Tanggal lahir (DD-MM-YYYY)", "", false)}
+          ${floatField("ktpAddress", "text", ktpDraft.address, "Alamat KTP", "", false)}
+        </div>`;
+    }
+
+    function pageLogin() {
+      if (authView === "pending") {
+        return `
+        <div class="min-h-screen flex flex-col justify-center items-center px-margin-mobile py-10 relative overflow-hidden">
+          <div class="absolute top-0 left-0 w-full h-1/3 bg-gradient-to-b from-white to-transparent opacity-50 pointer-events-none"></div>
+          <div class="w-full max-w-md bg-white rounded-[16px] shadow-level-1 p-lg z-10 text-center">
+            <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-surface-container-low text-primary mb-md">${icon("hourglass_top", "", true)}</div>
+            <h1 class="font-headline-md text-headline-md">Menunggu Super Admin</h1>
+            <p class="font-body-md text-body-md text-on-surface-variant mt-3">${esc(pendingMsg || "Pendaftaran sudah dikirim. Akun kurir baru terbuka setelah Super Admin menyetujui foto KTP dan data kamu.")}</p>
+            <form id="ktp-complete" class="text-left mt-5 flex flex-col gap-md">
+              <p class="font-label-sm text-label-sm text-on-surface-variant">Kalau foto KTP belum tampil di Super Admin, unggah ulang di sini.</p>
+              ${floatField("email", "email", draftReg.email, "Email daftar")}
+              ${floatField("password", showPass ? "text" : "password", draftReg.password, "Kata sandi")}
+              <input id="ktp-file" accept="image/*" capture="environment" type="file" class="w-full text-sm"/>
+              <div id="ktp-preview-wrap" class="${ktpDataUrl ? "" : "hidden"} rounded-xl overflow-hidden border border-outline bg-surface-container-low">
+                <img id="ktp-preview" src="${ktpDataUrl}" alt="Pratinjau KTP" class="w-full max-h-48 object-contain"/>
+              </div>
+              ${loginErr ? `<p class="font-body-md text-error">${esc(loginErr)}</p>` : ""}
+              <button class="w-full h-[52px] bg-ink text-white font-headline-sm text-headline-sm rounded-full">Simpan foto KTP</button>
+            </form>
+            <a href="#/login" id="back-login" class="mt-6 inline-flex h-12 px-5 items-center justify-center rounded-full bg-ink text-white font-headline-sm">Kembali ke masuk</a>
+          </div>
+        </div>`;
+      }
+      const isReg = authView === "register";
+      const pwType = showPass ? "text" : "password";
+      const eye = showPass ? "visibility_off" : "visibility";
+      const pill = (name, type, value, placeholder, ic) => `
+            <label class="flex items-center gap-2 h-14 px-3 rounded-2xl border border-[#E5E7EB] bg-white">
+              ${icon(ic, "text-primary")}
+              <input name="${name}" id="${name}" type="${type}" value="${esc(value)}" required class="flex-1 bg-transparent border-0 p-0 focus:ring-0" placeholder="${placeholder}" autocomplete="${name === "email" ? "email" : name === "phone" ? "tel" : "name"}"/>
+            </label>`;
+      return `
+        <div class="login-page min-h-screen max-w-md mx-auto p-4 pb-10">
+          <div class="login-hero anim-pop">
+            <img src="/login-hero-courier.png?v=8" alt="Antar pesanan, dapat ongkir"/>
+          </div>
+          <h1 class="text-center text-ink text-[22px] font-semibold tracking-tight mt-5 anim-up">${isReg ? "Daftar kurir" : "Selamat datang"}</h1>
+          <p class="text-center text-secondary text-[13px] leading-5 mb-6 anim-up d2">${isReg ? "Isi data sesuai KTP." : "Antar pesanan, dapat ongkir."}</p>
+          ${isReg ? `
+          <form id="register-form" class="space-y-3 anim-up d3">
+            <p class="text-[13px] text-secondary bg-white border border-[#E5E7EB] rounded-2xl px-3 py-3">Wajib: nama lengkap sesuai KTP, nomor WhatsApp aktif, dan foto KTP yang jelas.</p>
+            ${pill("fullName", "text", draftReg.fullName, "Nama lengkap sesuai KTP", "person")}
+            ${pill("phone", "tel", draftReg.phone, "Nomor WhatsApp (08…)", "chat")}
+            ${pill("email", "email", draftReg.email, "Email", "mail")}
+            <label class="relative flex items-center gap-2 h-14 pl-3 pr-12 rounded-2xl border border-[#E5E7EB] bg-white">
+              ${icon("lock", "text-primary")}
+              <input id="pw" name="password" type="${pwType}" required minlength="6" value="${esc(draftReg.password)}" class="flex-1 bg-transparent border-0 p-0 focus:ring-0" placeholder="Kata sandi (min. 6)"/>
+              <button type="button" id="toggle-pw" class="absolute right-2 top-0 h-full w-11 grid place-items-center text-secondary" aria-label="Lihat kata sandi">${icon(eye, "text-[22px]")}</button>
+            </label>
+            <label class="block">
+              <span class="font-headline-sm text-headline-sm">Foto KTP (wajib, jelas)</span>
+              <input id="ktp-file" accept="image/*" capture="environment" type="file" class="mt-2 w-full text-sm"/>
+            </label>
+            <div id="ktp-preview-wrap" class="${ktpDataUrl ? "" : "hidden"} rounded-xl overflow-hidden border border-outline bg-surface-container-low">
+              <img id="ktp-preview" src="${ktpDataUrl}" alt="Pratinjau KTP" class="w-full max-h-48 object-contain"/>
+            </div>
+            ${ktpVerifyBlock()}
+            ${loginErr ? `<p class="text-red-600 text-sm flex items-center gap-1">${icon("error", "text-[18px]")} ${esc(loginErr)}</p>` : ""}
+            <button class="press w-full h-[52px] bg-ink text-white rounded-full font-semibold flex items-center justify-center gap-2">
+              Kirim ke Super Admin ${icon("arrow_forward", "text-[20px]")}
+            </button>
+          </form>
+          <p class="text-center text-[13px] text-secondary mt-5">Sudah punya akun? <a href="#/login" class="text-primary font-semibold">Masuk</a></p>
+          ` : `
+          <form id="login-form" class="space-y-3 anim-up d3">
+            <label class="flex items-center gap-2 h-14 px-3 rounded-2xl border border-[#E5E7EB] bg-white">
+              ${icon("chat", "text-primary")}
+              <input name="email" id="email" type="text" value="budi@local.test" class="flex-1 bg-transparent border-0 p-0 focus:ring-0" placeholder="Email atau WhatsApp" autocomplete="email"/>
+            </label>
+            <label class="relative flex items-center gap-2 h-14 pl-3 pr-12 rounded-2xl border border-[#E5E7EB] bg-white">
+              ${icon("lock", "text-primary")}
+              <input id="pw" name="password" type="${pwType}" required value="password123" class="flex-1 bg-transparent border-0 p-0 focus:ring-0" placeholder="Kata sandi" autocomplete="current-password"/>
+              <button type="button" id="toggle-pw" class="absolute right-2 top-0 h-full w-11 grid place-items-center text-secondary" aria-label="Lihat kata sandi">${icon(eye, "text-[22px]")}</button>
+            </label>
+            ${loginErr ? `<p id="login-err" class="text-red-600 text-sm flex items-center gap-1">${icon("error", "text-[18px]")} ${esc(loginErr)}</p>` : `<p id="login-err" class="hidden"></p>`}
+            <button class="press w-full h-[52px] bg-ink text-white rounded-full font-semibold flex items-center justify-center gap-2" type="submit">
+              Masuk ${icon("arrow_forward", "text-[20px]")}
+            </button>
+          </form>
+          <p class="text-center text-[13px] text-secondary mt-5">Belum punya akun? <a href="#/register" class="text-primary font-semibold">Daftar dulu</a></p>
+          <p class="text-center text-xs text-secondary mt-3">Akun uji: budi@local.test / password123</p>
+          `}
+        </div>`;
+    }
+
+    function offerCard(o, i) {
+      const delay = "d" + Math.min((Number(i) || 0) + 3, 8);
+      const toOutlet = o.offer?.distanceToOutletKm;
+      const ttl = o.offer?.ttlSec;
+      return `
+        <a href="#/offer/${o.id}" class="card-lift press anim-up ${delay} block bg-white rounded-[24px] border border-[#eef0ee] shadow-[0_8px_24px_rgba(17,17,17,0.04)] overflow-hidden">
+          <div class="h-1 bg-primary"></div>
+          <div class="p-md">
+            <div class="flex justify-between gap-sm">
+              <div class="min-w-0">
+                <p class="font-label-sm text-label-sm text-primary uppercase tracking-wider">Khusus untukmu · terdekat outlet</p>
+                <p class="font-label-sm text-label-sm text-on-surface-variant mt-0.5">ID ${esc(o.id)}</p>
+                <p class="font-headline-sm text-headline-sm text-on-surface">${esc(merchantName(o))} → ${esc(customerName(o))}</p>
+                <p class="font-body-md text-body-md text-on-surface-variant mt-1 line-clamp-2">${esc(o.deliveryAddress || "")}</p>
+              </div>
+              <p class="font-currency-bold text-currency-bold text-primary shrink-0">${rupiah(o.courierEarning || o.deliveryFee)}</p>
+            </div>
+            <p class="font-label-sm text-label-sm text-secondary mt-3">${qty(o)} item · antar ${Number(o.billedDistanceKm || 0)} km · Tunai ${rupiah(o.grandTotal)}</p>
+            <p class="font-label-sm text-label-sm text-primary mt-1">${toOutlet != null ? "±" + Number(toOutlet).toFixed(1) + " km ke outlet" : "Jarak ke outlet dihitung GPS"}${ttl != null ? " · sisa " + ttl + " dtk" : ""}</p>
+          </div>
+        </a>`;
+    }
+
+    function pageHome(available, mine) {
+      const online = !!profile?.isOnline;
+      const active = (mine || []).find((o) => isActive(o.status));
+      const offers = Array.isArray(available) ? available : [];
+      return `
+        <div class="bg-[#f6f7f6] text-on-background min-h-screen flex flex-col pb-[96px]">
+          ${headerBar(online)}
+          <main class="flex-1 px-margin-mobile py-lg flex flex-col gap-lg max-w-lg mx-auto w-full">
+            <div class="${online ? "relative overflow-hidden rounded-[24px] hero-shimmer text-white p-5 min-h-[148px] anim-up" : "bg-white rounded-[24px] p-5 shadow-[0_8px_24px_rgba(17,17,17,0.04)] border border-[#eef0ee] anim-up"}">
+              ${online ? `<span class="blob bg-white/20 w-28 h-28 -right-6 -top-8"></span><span class="blob bg-white/10 w-20 h-20 right-16 bottom-0" style="animation-delay:.8s"></span>` : ""}
+              <div class="relative z-10 flex items-start justify-between gap-3">
+                <div>
+                  <p class="text-[12px] ${online ? "text-white/80" : "text-secondary"}">Status kurir</p>
+                  <p class="font-bold text-[22px] leading-tight">${online ? "Siap antar" : "Istirahat"}</p>
+                  <p class="text-sm mt-1 ${online ? "text-white/85" : "text-secondary"}" id="statusText">${online ? "Order khusus ditawarkan ke kurir terdekat outlet." : "Nyalakan kalau kamu siap jalan."}</p>
+                </div>
+                <button type="button" id="toggle-online" class="press relative w-14 h-8 rounded-full p-1 shrink-0 ${online ? "bg-white/30" : "bg-[#E5E7EB]"}">
+                  <span class="block w-6 h-6 rounded-full bg-white shadow transition-transform ${online ? "translate-x-6" : ""}"></span>
+                </button>
+              </div>
+              <p id="gps-line" class="relative z-10 text-[11px] mt-3 ${online ? "text-white/70" : "text-secondary"}">${lastGps ? "GPS aktif · " + lastGps.lat.toFixed(4) + ", " + lastGps.lng.toFixed(4) : "Menunggu izin lokasi"}</p>
+              ${online ? `<span class="absolute right-1 bottom-0 text-[72px] text-white/90 pointer-events-none" style="animation:scooter 2.4s ease-in-out infinite">${icon("delivery_dining", "", true)}</span>` : ""}
+            </div>
+            <a href="#/earnings" class="card-lift press anim-up d2 bg-white rounded-[24px] p-4 flex items-center gap-3 border border-[#eef0ee] shadow-[0_8px_24px_rgba(17,17,17,0.04)]">
+              <div class="w-12 h-12 rounded-2xl bg-primary-fixed text-primary grid place-items-center shrink-0">${icon("payments", "", true)}</div>
+              <div class="flex-1 min-w-0">
+                <p class="text-[12px] text-secondary">Ongkir hari ini</p>
+                <p class="font-bold text-[22px] leading-tight">${rupiah(profile?.earningsToday)}</p>
+              </div>
+              ${icon("chevron_right", "text-secondary")}
+            </a>
+            ${active ? `
+              <section>
+                <h2 class="font-headline-sm text-headline-sm mb-sm">Order aktif</h2>
+                <a href="#/job/${active.id}" class="card-lift press anim-up d3 block bg-surface-container-lowest rounded-[16px] border border-outline p-md shadow-level-1">
+                  <div class="flex items-center gap-xs mb-1">
+                    <span class="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
+                    <p class="font-label-sm text-label-sm text-primary uppercase tracking-wider">${goingOutlet(active.status) ? "Menuju outlet" : "Antar pesanan"}</p>
+                  </div>
+                  <p class="font-headline-sm text-headline-sm">${esc(merchantName(active))} → ${esc(customerName(active))}</p>
+                  <p class="font-body-md text-body-md text-on-surface-variant mt-1 line-clamp-2">${esc(active.deliveryAddress)}</p>
+                  <p class="font-headline-sm text-primary mt-3">Lanjutkan →</p>
+                </a>
+              </section>` : ""}
+            ${online && offers.length ? `
+              <section>
+                <h2 class="font-headline-sm text-headline-sm mb-sm">Penawaran order${active ? " berikutnya" : ""}</h2>
+                <div class="flex flex-col gap-sm">${offers.map((o, i) => offerCard(o, i)).join("")}</div>
+              </section>` : ""}
+            ${!active && !(online && offers.length) ? `
+              <div class="flex-1 flex flex-col items-center justify-center mt-xl gap-md anim-up d3 overflow-visible">
+                <div class="relative w-40 h-40 grid place-items-center overflow-visible">
+                  ${online ? `
+                    <span class="absolute inset-0 grid place-items-center pointer-events-none">
+                      <span class="radar-ping block w-16 h-16 rounded-full border-2 border-primary"></span>
+                    </span>
+                    <span class="absolute inset-0 grid place-items-center pointer-events-none">
+                      <span class="radar-ping block w-16 h-16 rounded-full border-2 border-primary" style="animation-delay:.8s"></span>
+                    </span>
+                    <span class="absolute inset-0 grid place-items-center pointer-events-none">
+                      <span class="radar-ping block w-16 h-16 rounded-full border-2 border-primary/50" style="animation-delay:1.6s"></span>
+                    </span>` : ""}
+                  <div class="relative z-10 w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-sm">${icon("radar", "text-primary text-4xl", true)}</div>
+                </div>
+                <p class="font-body-lg text-body-lg text-on-surface-variant text-center px-xl">${online ? "Menunggu giliran order terdekat ke posisimu…" : "Nyalakan status ON untuk melihat pesanan masuk."}</p>
+              </div>` : ""}
+          </main>
+        </div>`;
+    }
+
+    function pageOrders(available, mine) {
+      const active = (mine || []).filter((o) => isActive(o.status));
+      const done = (mine || []).filter((o) => o.status === "COMPLETED").slice(0, 8);
+      const offers = Array.isArray(available) ? available : [];
+      return `
+        <div class="bg-[#f6f7f6] min-h-screen flex flex-col pb-[96px]">
+          <main class="p-margin-mobile flex flex-col gap-lg max-w-lg mx-auto w-full">
+            <h1 class="font-headline-md text-headline-md">Order</h1>
+            ${active.length ? `<section><h2 class="font-headline-sm text-headline-sm mb-sm">Sedang berjalan</h2><div class="flex flex-col gap-sm">${active.map((o) => `
+              <a href="#/job/${o.id}" class="block bg-surface-container-lowest rounded-[16px] border border-outline p-md shadow-level-1">
+                <p class="font-headline-sm">${esc(o.id)}</p>
+                <p class="font-body-md text-on-surface-variant">${esc(merchantName(o))} → ${esc(customerName(o))}</p>
+              </a>`).join("")}</div></section>` : ""}
+            <section>
+              <h2 class="font-headline-sm text-headline-sm mb-sm">Siap dijemput</h2>
+              ${offers.length ? `<div class="flex flex-col gap-sm">${offers.map((o, i) => offerCard(o, i)).join("")}</div>` : `<p class="font-body-md text-secondary">${profile?.isOnline ? "Tidak ada order terbuka." : "Nyalakan status ON di Beranda dulu."}</p>`}
+            </section>
+            ${done.length ? `<section><h2 class="font-headline-sm text-headline-sm mb-sm">Selesai</h2><div class="bg-surface-container-lowest rounded-[16px] p-sm shadow-level-1">${done.map((o) => `
+              <div class="flex justify-between items-center py-sm border-b-2 border-surface-container-low last:border-0">
+                <span class="font-body-md">${esc(o.id)}</span>
+                <span class="font-currency-bold text-primary">+${rupiah(o.courierEarning)}</span>
+              </div>`).join("")}</div></section>` : ""}
+          </main>
+        </div>`;
+    }
+
+    function pageOffer(order) {
+      const ongkir = order.courierEarning || order.deliveryFee;
+      const km = Number(order.billedDistanceKm || 0);
+      const toOutlet = order.offer?.distanceToOutletKm;
+      const ttl = Number(order.offer?.ttlSec ?? order.offer?.offerTtlSec ?? 45);
+      return `
+        <div class="bg-background text-on-background min-h-screen flex flex-col relative overflow-hidden">
+          <div class="relative w-full h-64 md:h-80 shrink-0">
+            <div id="job-map" class="absolute inset-0 bg-[#dce6ef]"></div>
+            <div class="absolute inset-0 map-gradient z-10 pointer-events-none"></div>
+            <div class="absolute top-0 left-0 w-full p-margin-mobile flex justify-between items-start z-20">
+              <button type="button" id="decline-order" class="bg-surface-container-lowest rounded-full p-2 shadow-sm w-12 h-12 grid place-items-center">${icon("close")}</button>
+              <div class="relative w-16 h-16 flex items-center justify-center bg-surface-container-lowest rounded-full shadow-sm">
+                <svg class="absolute inset-0 w-full h-full" viewBox="0 0 100 100">
+                  <circle class="text-surface-variant stroke-current" cx="50" cy="50" fill="transparent" r="40" stroke-width="8"></circle>
+                  <circle id="timer-ring" class="text-primary stroke-current progress-ring" cx="50" cy="50" fill="transparent" r="40" stroke-dasharray="251.2" stroke-dashoffset="0" stroke-linecap="round" stroke-width="8"></circle>
+                </svg>
+                <span id="timer-text" class="font-headline-md text-headline-md text-primary">${ttl}</span>
+              </div>
+            </div>
+          </div>
+          <div class="flex-1 px-margin-mobile -mt-8 relative z-30 pb-[120px] overflow-y-auto">
+            <div class="bg-primary-fixed text-primary rounded-xl px-3 py-2 mb-3 text-sm font-semibold">
+              Khusus untukmu — kamu kurir terdekat ke outlet${toOutlet != null ? " (±" + Number(toOutlet).toFixed(1) + " km)" : ""}. Kurir lain tidak melihat order ini dulu.
+            </div>
+            <div class="bg-surface-container-lowest rounded-xl p-md shadow-sm mb-lg flex justify-between items-center border border-surface-container-high">
+              <div>
+                <p class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider mb-1">Ongkir</p>
+                <p class="font-display-lg text-display-lg text-primary">${rupiah(ongkir)}</p>
+                ${km ? `<p class="font-label-sm text-on-surface-variant mt-0.5">Antar ${km} km</p>` : ""}
+              </div>
+              <div class="bg-tertiary-fixed text-on-tertiary-fixed-variant px-3 py-1 rounded-full flex items-center gap-1">
+                ${icon("payments", "text-sm", true)}
+                <span class="font-label-sm text-label-sm">Cash</span>
+              </div>
+            </div>
+            <div class="bg-surface-container-lowest rounded-xl p-md shadow-sm mb-md border border-surface-container-high relative">
+              <div class="absolute left-[31px] top-[40px] bottom-[40px] w-0.5 bg-surface-variant z-0"></div>
+              <div class="flex items-start gap-md relative z-10 mb-lg">
+                <div class="w-8 h-8 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center shrink-0">${icon("storefront", "text-sm", true)}</div>
+                <div>
+                  <p class="font-label-sm text-label-sm text-on-surface-variant mb-1">Pickup</p>
+                  <p class="font-headline-sm text-headline-sm text-on-surface mb-0.5">${esc(merchantName(order))}</p>
+                  <p class="font-body-md text-body-md text-on-surface-variant">${esc(merchantAddr(order))}</p>
+                </div>
+              </div>
+              <div class="flex items-start gap-md relative z-10">
+                <div class="w-8 h-8 rounded-full bg-tertiary-container text-on-tertiary-container flex items-center justify-center shrink-0">${icon("location_on", "text-sm", true)}</div>
+                <div>
+                  <p class="font-label-sm text-label-sm text-on-surface-variant mb-1">Dropoff</p>
+                  <p class="font-headline-sm text-headline-sm text-on-surface mb-0.5">${esc(customerName(order))}</p>
+                  <p class="font-body-md text-body-md text-on-surface-variant">${esc(order.deliveryAddress)}</p>
+                </div>
+              </div>
+            </div>
+            <div class="bg-surface-container-lowest rounded-xl p-md shadow-sm border border-surface-container-high flex justify-between items-center">
+              <div class="flex items-center gap-xs">
+                ${icon("restaurant", "text-on-surface-variant")}
+                <span class="font-body-lg text-body-lg">${qty(order)} makanan</span>
+              </div>
+              <div class="text-right">
+                <p class="font-label-sm text-label-sm text-on-surface-variant">Total Tagihan</p>
+                <p class="font-currency-bold text-currency-bold">${rupiah(order.grandTotal)}</p>
+              </div>
+            </div>
+          </div>
+          <div class="fixed bottom-0 left-0 w-full bg-surface-container-lowest p-margin-mobile border-t border-surface-container-high shadow-[0_-4px_16px_rgba(0,0,0,0.08)] z-40 flex gap-md">
+            <button type="button" id="decline-order-2" class="press flex-1 h-[52px] rounded-[12px] border border-primary text-primary font-headline-sm text-headline-sm flex items-center justify-center">Lewati</button>
+            <button type="button" id="accept-order" class="press flex-1 h-[52px] rounded-full bg-ink text-white font-headline-sm text-headline-sm flex items-center justify-center shadow-sm">Terima</button>
+          </div>
+        </div>`;
+    }
+
+    function pageJob(order) {
+      const outlet = goingOutlet(order.status);
+      const phone = order.customer?.phone || "";
+      if (outlet) {
+        return `
+        <div class="relative h-full max-h-[100dvh] overflow-hidden bg-background">
+          <div class="absolute inset-0 z-0">
+            <div id="job-map" class="w-full h-full bg-[#dce6ef]"></div>
+            <a href="#/home" aria-label="Back" class="absolute top-margin-mobile left-margin-mobile w-[48px] h-[48px] bg-surface-container-lowest rounded-full shadow-level-2 flex items-center justify-center z-10">${icon("arrow_back", "text-on-surface")}</a>
+            <button type="button" id="recenter" aria-label="Current Location" class="absolute top-[30%] right-margin-mobile w-[48px] h-[48px] bg-surface-container-lowest rounded-full shadow-level-2 flex items-center justify-center z-10 text-primary">${icon("my_location")}</button>
+          </div>
+          <div class="absolute bottom-0 w-full z-20 flex flex-col justify-end pointer-events-none">
+            <div class="glass-panel w-full rounded-t-xl shadow-[0_-4px_16px_rgba(0,0,0,0.08)] pointer-events-auto flex flex-col max-h-[85vh]">
+              <div class="w-full flex justify-center py-sm"><div class="w-12 h-1.5 bg-surface-variant rounded-full"></div></div>
+              <div class="px-margin-mobile pb-margin-mobile flex flex-col gap-md overflow-y-auto hide-scrollbar">
+                <div class="flex items-start justify-between gap-sm">
+                  <div class="flex flex-col gap-1 min-w-0">
+                    <div class="flex items-center gap-xs">
+                      <span class="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
+                      <span class="font-label-sm text-label-sm text-primary uppercase tracking-wider">Menuju outlet</span>
+                    </div>
+                    <h2 class="font-headline-md text-headline-md text-on-surface">${esc(merchantName(order))}</h2>
+                    <p class="font-body-md text-body-md text-on-surface-variant">${esc(merchantAddr(order))}</p>
+                  </div>
+                  <a id="maps-link" target="_blank" rel="noopener" class="flex flex-col items-center justify-center bg-primary text-on-primary rounded-xl w-[64px] h-[64px] shrink-0">
+                    ${icon("directions")}<span class="font-label-sm text-[10px] uppercase">Arah</span>
+                  </a>
+                </div>
+                <div class="h-[2px] w-full bg-surface-variant rounded-full"></div>
+                <div class="flex flex-col gap-sm">
+                  <h3 class="font-headline-sm text-headline-sm">Daftar Pesanan</h3>
+                  <div class="flex flex-col gap-2">${items(order).map((it) => `
+                    <label class="flex items-center gap-sm p-sm rounded-lg border border-secondary-container bg-surface-container-lowest min-h-[48px]">
+                      <div class="relative w-6 h-6 shrink-0">
+                        <input class="pickup-check" type="checkbox"/>
+                        <span class="t-check-face pointer-events-none flex h-6 w-6 items-center justify-center rounded-md border-2 border-outline bg-surface-container-lowest">
+                          <span class="t-success-check" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" width="16" height="16" fill="none">
+                              <path d="M5 12.5L10 17.5L19 7" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                          </span>
+                        </span>
+                      </div>
+                      <span class="font-body-lg text-body-lg flex-1">Ambil ${esc(it.name)}</span>
+                      <span class="font-label-sm text-label-sm text-on-surface-variant bg-surface-container px-2 py-1 rounded">${esc(it.qty)}x</span>
+                    </label>`).join("")}
+                  </div>
+                </div>
+                <div class="flex items-center gap-sm p-sm bg-surface-container-low rounded-lg border border-surface-variant">
+                  ${icon("info", "text-secondary")}
+                  <span class="font-body-md text-body-md text-on-surface-variant">Belum ada uang yang diterima</span>
+                </div>
+                <button type="button" id="job-next" class="press w-full bg-ink text-white font-headline-sm text-headline-sm h-[52px] rounded-full flex items-center justify-center gap-2 shadow-[0_4px_12px_rgba(0,112,255,0.2)]">
+                  <span>${foodReady(order) ? "Konfirmasi pickup" : "Menunggu dapur siap"}</span>${icon("check_circle")}
+                </button>
+              </div>
+            </div>
+          </div>
+          ${chatOverlayHtml(customerName(order))}
+        </div>`;
+      }
+      return `
+        <div class="relative h-full max-h-[100dvh] overflow-hidden bg-background">
+          <div id="job-map" class="absolute inset-0 bg-[#dce6ef]"></div>
+          <header class="fixed top-0 left-0 right-0 z-50 px-margin-mobile h-[64px] flex items-center justify-between pointer-events-none">
+            <a href="#/home" class="w-12 h-12 flex items-center justify-center bg-surface-container-lowest rounded-full shadow-sm text-on-surface pointer-events-auto">${icon("arrow_back")}</a>
+            <button type="button" id="open-chat" class="relative w-12 h-12 flex items-center justify-center bg-surface-container-lowest rounded-full shadow-sm text-on-surface pointer-events-auto" aria-label="Pesan">
+              ${icon("chat", "", true)}
+              <span id="chat-badge" class="hidden absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-error text-on-error text-[10px] font-bold grid place-items-center"></span>
+            </button>
+          </header>
+          <div class="absolute bottom-0 left-0 right-0 z-40 flex flex-col pt-4">
+            <div class="flex justify-center mb-4 pointer-events-none">
+              <div class="bg-tertiary-container text-on-tertiary-container px-4 py-2 rounded-full font-label-sm text-label-sm shadow-sm flex items-center gap-2">
+                ${icon("local_shipping", "", true)} Antar pesanan
+              </div>
+            </div>
+            <div class="glass-panel w-full rounded-t-3xl shadow-[0_-8px_24px_rgba(0,0,0,0.1)] px-margin-mobile pb-8 pt-6 flex flex-col gap-6">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3 min-w-0">
+                  <div class="w-12 h-12 rounded-full bg-surface-variant flex items-center justify-center shrink-0">${icon("person", "text-on-surface-variant", true)}</div>
+                  <div class="min-w-0">
+                    <h2 class="font-headline-sm text-headline-sm text-on-surface">${esc(customerName(order))}</h2>
+                    <p class="font-body-md text-body-md text-on-surface-variant line-clamp-1">${esc(order.deliveryAddress)}</p>
+                  </div>
+                </div>
+                <a href="tel:${esc(phone)}" class="w-12 h-12 rounded-full border border-secondary-container flex items-center justify-center text-primary shrink-0">${icon("call", "", true)}</a>
+              </div>
+              <hr class="border-secondary-container"/>
+              <div class="flex flex-col gap-2">
+                <p class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Metode Pembayaran</p>
+                <div class="bg-error-container text-on-error-container rounded-xl p-4 flex flex-col gap-1 border border-outline-variant">
+                  <div class="flex items-center gap-2 mb-1">${icon("payments", "", true)}<span class="font-headline-sm text-headline-sm">Tagih Tunai</span></div>
+                  <div class="font-display-lg text-display-lg">${rupiah(order.grandTotal)}</div>
+                </div>
+                <div class="flex flex-col gap-1 mt-2 px-2">
+                  <div class="flex justify-between font-body-md text-body-md text-on-surface-variant"><span>Makanan</span><span>${rupiah(order.foodSubtotal)}</span></div>
+                  <div class="flex justify-between font-body-md text-body-md text-on-surface-variant"><span>Ongkir</span><span>${rupiah(order.courierEarning || order.deliveryFee)}</span></div>
+                </div>
+              </div>
+              <div class="flex flex-col gap-3 mt-2">
+                <button type="button" id="job-next" class="press w-full h-[52px] bg-ink text-white rounded-xl font-headline-sm text-headline-sm shadow-sm flex items-center justify-center gap-2">
+                  ${icon("check_circle")} ${order.status === "DELIVERED" ? "Selesai · Tunai diterima" : "Pesanan sampai · Tunai diterima"}
+                </button>
+                <button type="button" id="open-chat-2" class="w-full h-[52px] bg-transparent text-primary rounded-xl font-headline-sm text-headline-sm border border-primary flex items-center justify-center gap-2">
+                  ${icon("chat")} Hubungi customer
+                </button>
+              </div>
+            </div>
+          </div>
+          ${chatOverlayHtml(customerName(order))}
+        </div>`;
+    }
+
+    function pageEarnings(mine) {
+      const today = new Date(); today.setHours(0, 0, 0, 0);
+      const week = new Date(Date.now() - 7 * 86400000);
+      const completed = (mine || []).filter((o) => o.status === "COMPLETED");
+      const todayRows = completed.filter((o) => new Date(o.completedAt || o.createdAt) >= today);
+      const weekSum = completed.filter((o) => new Date(o.completedAt || o.createdAt) >= week).reduce((s, o) => s + (o.courierEarning || 0), 0);
+      return `
+        <div class="bg-[#f6f7f6] min-h-screen flex flex-col pb-24">
+          <main class="p-margin-mobile flex flex-col gap-lg max-w-lg mx-auto w-full">
+            <h1 class="font-headline-md text-headline-md">Pendapatan</h1>
+            <section class="glass-card rounded-xl p-md flex flex-col gap-md relative overflow-hidden anim-up">
+              <div class="absolute -top-10 -right-10 w-32 h-32 bg-tertiary-fixed-dim rounded-full blur-2xl opacity-30"></div>
+              <div class="absolute -bottom-10 -left-10 w-32 h-32 bg-primary-fixed-dim rounded-full blur-2xl opacity-30"></div>
+              <div class="relative z-10 flex flex-col gap-xs">
+                <h2 class="font-body-md text-on-surface-variant">Pendapatan Hari Ini</h2>
+                <span class="font-display-lg text-display-lg text-primary">${rupiah(profile?.earningsToday)}</span>
+              </div>
+              <div class="relative z-10 flex justify-between items-center bg-surface-container-low rounded-lg p-sm">
+                <span class="font-body-md text-on-surface-variant">Minggu ini</span>
+                <span class="font-currency-bold text-currency-bold text-on-surface">${rupiah(weekSum)}</span>
+              </div>
+              <div class="relative z-10 flex items-start gap-xs p-sm rounded-lg border border-tertiary-fixed-dim/30" style="background:rgba(0,131,118,0.08)">
+                ${icon("info", "text-tertiary text-sm")}
+                <p class="font-body-md text-body-md text-on-surface-variant">Pendapatan kurir = ongkir. Komisi makanan bukan milik kurir.</p>
+              </div>
+            </section>
+            <section class="flex flex-col gap-md">
+              <h3 class="font-headline-sm text-headline-sm text-on-surface">Riwayat Ongkir Hari Ini</h3>
+              <div class="flex flex-col bg-surface-container-lowest rounded-xl p-sm shadow-level-1">
+                ${todayRows.length ? todayRows.map((o) => `
+                  <div class="flex justify-between items-center py-sm border-b-2 border-surface-container-low last:border-0">
+                    <div class="flex items-center gap-sm">
+                      <div class="w-10 h-10 rounded-full flex items-center justify-center" style="background:rgba(140,245,228,0.3)">${icon("two_wheeler", "text-tertiary", true)}</div>
+                      <div class="flex flex-col">
+                        <span class="font-body-md font-semibold">${esc(o.id)}</span>
+                        <span class="font-label-sm text-label-sm text-on-surface-variant">${esc(merchantName(o))} · ${Number(o.billedDistanceKm || 0)} km</span>
+                      </div>
+                    </div>
+                    <div class="flex flex-col items-end">
+                      <span class="font-currency-bold text-currency-bold text-primary">+${rupiah(o.courierEarning)}</span>
+                      <span class="font-label-sm text-label-sm text-tertiary">Selesai</span>
+                    </div>
+                  </div>`).join("") : `<p class="p-6 font-body-md text-secondary text-center">Belum ada antar hari ini.</p>`}
+              </div>
+            </section>
+          </main>
+        </div>`;
+    }
+
+    function settingRow(opts) {
+      const trailing = opts.toggle
+        ? `<span class="text-xs font-semibold ${opts.toggleOn ? "text-primary" : "text-secondary"} mr-1">${opts.toggleOn ? "Online" : "Offline"}</span><span class="relative inline-block w-14 h-7 rounded-full shrink-0 ${opts.toggleOn ? "bg-primary" : "bg-[#E5E7EB]"}" aria-hidden="true"><span class="absolute top-0.5 w-6 h-6 bg-white rounded-full shadow ${opts.toggleOn ? "right-0.5" : "left-0.5"}"></span></span>`
+        : `${opts.hint ? `<span class="text-xs text-secondary max-w-[42%] truncate text-right">${esc(opts.hint)}</span>` : ""}${icon("chevron_right", "text-[#c5c5c5] text-[22px]")}`;
+      const inner = `
+        <span class="w-10 h-10 rounded-xl grid place-items-center ${opts.tone || "bg-[#F3F4F6] text-on-surface"} shrink-0">${icon(opts.icon, "text-[22px]", true)}</span>
+        <span class="flex-1 font-semibold text-[15px] text-on-surface text-left">${esc(opts.label)}</span>
+        ${trailing}`;
+      const cls = "press flex items-center gap-3 px-4 min-h-[56px] active:bg-[#F3F4F6] w-full text-left";
+      if (opts.href) return `<a href="${opts.href}" class="${cls}">${inner}</a>`;
+      return `<button type="button" id="${opts.id}" class="${cls}"${opts.toggle ? ` aria-pressed="${opts.toggleOn ? "true" : "false"}"` : ""}>${inner}</button>`;
+    }
+
+    function pageAccount() {
+      const online = !!profile?.isOnline;
+      const name = profile?.fullName || user?.displayName || "Kurir";
+      const email = user?.email || "";
+      const phone = profile?.phone || "";
+      const initial = (name.trim()[0] || "K").toUpperCase();
+      const lat = lastGps?.lat ?? profile?.lastLatitude;
+      const lng = lastGps?.lng ?? profile?.lastLongitude;
+      const gpsLabel =
+        lat != null && lng != null && !Number.isNaN(Number(lat))
+          ? Number(lat).toFixed(5) + ", " + Number(lng).toFixed(5)
+          : "Belum ditandai";
+      return `
+        <div class="max-w-lg mx-auto pb-24 min-h-screen bg-white">
+          <header class="px-4 pt-4 pb-2">
+            <a href="#/home" class="w-11 h-11 rounded-full bg-white shadow-[0_2px_8px_rgba(0,0,0,0.06)] grid place-items-center text-on-surface">${icon("arrow_back")}</a>
+            <h1 class="mt-4 font-bold text-[32px] leading-tight text-on-surface tracking-tight">Profil</h1>
+          </header>
+
+          <section class="mx-4 mt-4 bg-white rounded-[28px] shadow-[0_8px_28px_rgba(0,0,0,0.06)] px-5 pt-7 pb-6 text-center">
+            <div class="w-[92px] h-[92px] mx-auto rounded-full bg-primary-fixed text-primary text-3xl font-bold grid place-items-center ring-4 ring-white shadow">${esc(initial)}</div>
+            ${editingCourierProfile ? `
+              <form id="acct-edit" class="mt-5 text-left space-y-3">
+                <div>
+                  <label class="text-[11px] font-semibold tracking-wide text-on-surface-variant uppercase">Nama lengkap</label>
+                  <input id="acct-name" name="fullName" required value="${esc(name)}" class="mt-1 w-full h-12 px-3 rounded-xl border border-[#E5E7EB] bg-white"/>
+                </div>
+                <div>
+                  <label class="text-[11px] font-semibold tracking-wide text-on-surface-variant uppercase">Nomor HP</label>
+                  <input id="acct-phone" name="phone" value="${esc(phone)}" class="mt-1 w-full h-12 px-3 rounded-xl border border-[#E5E7EB] bg-white"/>
+                </div>
+                <div>
+                  <label class="text-[11px] font-semibold tracking-wide text-on-surface-variant uppercase">Alamat email</label>
+                  <input type="email" disabled value="${esc(email)}" class="mt-1 w-full h-12 px-3 rounded-xl border border-[#E5E7EB] bg-[#F9FAFB] text-secondary"/>
+                </div>
+                ${courierProfileError ? `<p id="acct-edit-err" class="text-sm text-red-600">${esc(courierProfileError)}</p>` : `<p id="acct-edit-err" class="text-sm text-red-600 hidden"></p>`}
+                <div class="flex gap-2 pt-1">
+                  <button type="button" id="acct-edit-cancel" class="flex-1 h-11 rounded-full border border-[#E5E7EB] font-semibold">Batal</button>
+                  <button type="submit" id="acct-edit-save" class="flex-1 h-11 rounded-full bg-ink text-white font-semibold">Simpan</button>
+                </div>
+              </form>
+            ` : `
+              <h2 class="mt-4 font-bold text-[22px] leading-tight text-on-surface">${esc(name)}</h2>
+              <p class="mt-1 text-sm text-secondary">${esc(email)}</p>
+              <p class="mt-2 text-[13px] text-on-surface-variant flex items-center justify-center gap-1.5 flex-wrap">
+                <span>Kurir</span>
+                <span class="opacity-40">•</span>
+                <span class="${online ? "text-primary font-semibold" : ""}">${online ? "Online" : "Offline"}</span>
+              </p>
+              <button type="button" id="acct-edit-open" class="mt-5 inline-flex items-center justify-center gap-2 h-12 px-8 rounded-full bg-ink text-white font-semibold shadow-[0_8px_20px_rgba(0,0,0,0.18)]">
+                ${icon("edit", "text-[18px]")} Ubah profil
+              </button>
+            `}
+          </section>
+
+          <section class="mx-4 mt-5 bg-white rounded-[22px] shadow-[0_4px_16px_rgba(0,0,0,0.04)] overflow-hidden divide-y divide-[#f0ebe6]">
+            ${settingRow({ id: "toggle-online", icon: "sensors", label: "Status kurir", tone: online ? "bg-primary-fixed text-primary" : "bg-[#F3F4F6] text-ink", toggle: true, toggleOn: online })}
+            ${settingRow({ id: "open-location", icon: "my_location", label: "Lokasi GPS", hint: gpsLabel === "Belum ditandai" ? "Atur" : "Aktif", tone: "bg-primary-fixed text-primary" })}
+            ${settingRow({ id: "go-earnings", icon: "payments", label: "Pendapatan", tone: "bg-[#FEF3C7] text-[#B45309]" })}
+            ${settingRow({
+              id: "go-priority",
+              icon: "workspace_premium",
+              label: "Langganan prioritas",
+              hint: profile?.priorityActive
+                ? "Aktif"
+                : profile?.priorityRequestStatus === "PENDING"
+                  ? "Menunggu admin"
+                  : "Bayar untuk aktif",
+              tone: profile?.priorityActive
+                ? "bg-primary-fixed text-primary"
+                : profile?.priorityRequestStatus === "PENDING"
+                  ? "bg-[#FEF3C7] text-[#B45309]"
+                  : "bg-[#F3E8FF] text-[#7C3AED]",
+            })}
+            ${settingRow({ id: "go-orders", icon: "receipt_long", label: "Riwayat order", tone: "bg-[#EEF2FF] text-[#4F46E5]" })}
+          </section>
+
+          <section id="priority-panel" class="mx-4 mt-4 bg-white rounded-[22px] shadow-[0_4px_16px_rgba(0,0,0,0.04)] overflow-hidden ${showCourierPriorityPanel ? "" : "hidden"}">
+            <div class="px-4 py-3 flex items-center justify-between border-b border-[#f0ebe6]">
+              <h3 class="font-semibold">Langganan prioritas</h3>
+              <button type="button" id="close-priority" class="w-9 h-9 rounded-full bg-[#F3F4F6] grid place-items-center text-secondary" aria-label="Tutup">${icon("close", "text-[18px]")}</button>
+            </div>
+            <div class="px-4 py-4">
+              <p class="text-sm text-secondary">Order masuk tanpa syarat jarak terdekat. Transfer ke rekening sistem, lampirkan bukti, lalu kirim. Super Admin akan setujui setelah cek.</p>
+              <p class="mt-3 text-sm">Biaya <span class="font-bold text-primary">${rupiah(profile?.priorityFee || 25000)}</span> / ${profile?.priorityLabel || ((profile?.priorityDays || 7) + " hari")}</p>
+              <div class="mt-3 rounded-2xl bg-[#F9FAFB] border border-[#E5E7EB] p-3 space-y-2">
+                <p class="text-[11px] font-bold tracking-wide text-secondary uppercase">Rekening sistem ANTARQ</p>
+                <div class="flex items-center justify-between gap-2">
+                  <div>
+                    <p class="text-[11px] text-secondary">Bank</p>
+                    <p class="font-semibold">${esc(profile?.payoutAccount?.bankName || "BCA")}</p>
+                  </div>
+                  <button type="button" class="copy-payout text-xs font-bold text-primary" data-copy="${esc(profile?.payoutAccount?.bankName || "BCA")}">Salin</button>
+                </div>
+                <div class="flex items-center justify-between gap-2">
+                  <div>
+                    <p class="text-[11px] text-secondary">Nomor rekening</p>
+                    <p class="font-semibold font-mono">${esc(profile?.payoutAccount?.accountNumber || "")}</p>
+                  </div>
+                  <button type="button" class="copy-payout text-xs font-bold text-primary" data-copy="${esc(profile?.payoutAccount?.accountNumber || "")}">Salin</button>
+                </div>
+                <div class="flex items-center justify-between gap-2">
+                  <div>
+                    <p class="text-[11px] text-secondary">Atas nama</p>
+                    <p class="font-semibold">${esc(profile?.payoutAccount?.accountName || "")}</p>
+                  </div>
+                  <button type="button" class="copy-payout text-xs font-bold text-primary" data-copy="${esc(profile?.payoutAccount?.accountName || "")}">Salin</button>
+                </div>
+              </div>
+              ${profile?.priorityActive
+                ? `<p class="mt-3 text-sm text-primary font-semibold">Aktif sampai ${profile?.priorityUntil ? new Date(profile.priorityUntil).toLocaleDateString("id-ID") : "—"}</p>`
+                : profile?.priorityRequestStatus === "PENDING"
+                  ? `<div class="mt-3 space-y-2">
+                      <p class="text-sm font-semibold text-[#B45309]">Pengajuan terkirim. Super Admin sedang cek bukti transfer.</p>
+                      ${profile?.priorityProofUrl ? `<div class="rounded-2xl bg-[#F3F4F6] p-2 flex items-center justify-center max-h-[220px] overflow-hidden"><img src="${esc(profile.priorityProofUrl)}" alt="Bukti" class="max-h-[176px] w-auto max-w-full object-contain rounded-xl"/></div>` : ""}
+                    </div>`
+                  : `<div class="mt-4 space-y-3">
+                      <label id="priority-proof-box" class="block rounded-2xl border-2 border-dashed border-[#D1D5DB] bg-[#F3F4F6] p-3 text-center cursor-pointer overflow-hidden max-h-[220px] min-h-[120px] flex flex-col items-center justify-center">
+                        <img id="priority-proof-preview" class="hidden max-h-[176px] w-auto max-w-full object-contain rounded-xl"/>
+                        <div id="priority-proof-empty">
+                          <p id="priority-proof-label" class="font-semibold text-sm">Ambil foto bukti transfer</p>
+                          <p class="text-[12px] text-secondary mt-1">Struk ATM atau screenshot m-banking. Wajib.</p>
+                        </div>
+                        <input type="file" id="priority-proof-input" accept="image/*" capture="environment" class="sr-only"/>
+                      </label>
+                      <button type="button" id="buy-priority" class="w-full h-12 rounded-full bg-ink text-white font-semibold">Kirim pengajuan</button>
+                    </div>`}
+            </div>
+          </section>
+
+          <section class="mx-4 mt-3 bg-white rounded-[22px] shadow-[0_4px_16px_rgba(0,0,0,0.04)] overflow-hidden divide-y divide-[#f0ebe6]">
+            ${settingRow({ href: "#/help", icon: "support_agent", label: "Bantuan", hint: "Laporkan kendala", tone: "bg-[#ECFEFF] text-[#0E7490]" })}
+            ${settingRow({ id: "logout", icon: "logout", label: "Keluar", tone: "bg-[#FEE2E2] text-[#DC2626]" })}
+          </section>
+
+          <section id="location-panel" class="mx-4 mt-5 bg-white rounded-[22px] shadow-[0_4px_16px_rgba(0,0,0,0.04)] overflow-hidden ${showCourierLocationPanel ? "" : "hidden"}">
+            <div class="px-4 py-3 flex items-center justify-between">
+              <h3 class="font-semibold">Lokasi GPS</h3>
+              <span class="text-[10px] font-bold tracking-wide bg-primary-fixed text-primary px-2 py-1 rounded-md">KURIR</span>
+            </div>
+            <div class="relative w-full h-[180px] bg-surface-container-low">
+              <div id="acct-map" class="absolute inset-0 z-0"></div>
+              <div class="pointer-events-none absolute left-1/2 top-1/2 z-10 -translate-x-1/2 -translate-y-full">
+                <div class="w-9 h-9 rounded-full bg-[#22C55E] border-[3px] border-white shadow-[0_6px_16px_rgba(17,17,17,0.28)] grid place-items-center">
+                  ${icon("two_wheeler", "text-white text-[18px]", true)}
+                </div>
+                <div class="w-2 h-2 bg-[#22C55E] rotate-45 mx-auto -mt-1 shadow-sm"></div>
+              </div>
+            </div>
+            <div class="p-4 space-y-3">
+              <p class="font-semibold">Titik kurir</p>
+              <p id="acct-coords" class="text-sm text-on-surface-variant leading-snug">${esc(gpsLabel)}</p>
+              <form id="acct-search" class="flex gap-2">
+                <input id="acct-query" placeholder="Cari alamat atau nama jalan…" class="flex-1 min-w-0 h-11 rounded-full border border-[#E5E7EB] px-4 text-sm bg-white"/>
+                <button type="submit" class="h-11 px-4 rounded-full border border-[#E5E7EB] bg-white text-sm font-bold shrink-0">Cari</button>
+              </form>
+              <button type="button" id="acct-gps" class="w-full h-11 rounded-full border border-primary text-primary font-semibold text-sm flex items-center justify-center gap-2">
+                ${icon("my_location", "text-[18px]")} Perbarui lokasi HP
+              </button>
+              <p id="acct-live-coords" class="text-[12px] font-mono text-secondary">${gpsLabel === "Belum ditandai" ? "" : gpsLabel}</p>
+              <p id="acct-gps-err" class="text-sm text-error font-medium hidden"></p>
+              <p id="acct-gps-hint" class="text-sm font-medium text-[#15803D] hidden"></p>
+              <button type="button" id="acct-save" class="press w-full h-12 rounded-full bg-ink text-white font-bold text-sm">Simpan titik kurir</button>
+            </div>
+          </section>
+        </div>`;
+    }
+
+    const HELP_CATEGORIES = [
+      ["ORDER", "Masalah order"],
+      ["PAYMENT", "Pembayaran"],
+      ["ACCOUNT", "Akun"],
+      ["APP", "Aplikasi"],
+      ["OTHER", "Lainnya"],
+    ];
+    const HELP_STATUS = {
+      OPEN: "Menunggu",
+      IN_PROGRESS: "Diproses",
+      RESOLVED: "Selesai",
+      CLOSED: "Ditutup",
+    };
+
+    function pageHelp(reports) {
+      const list = reports || [];
+      return `
+        <div class="max-w-lg mx-auto pb-24 min-h-screen bg-white">
+          <header class="px-4 pt-4 pb-2">
+            <a href="#/account" class="w-11 h-11 rounded-full bg-white shadow-[0_2px_8px_rgba(0,0,0,0.06)] grid place-items-center text-on-surface">${icon("arrow_back")}</a>
+            <h1 class="mt-4 font-bold text-[32px] leading-tight text-on-surface tracking-tight">Bantuan</h1>
+            <p class="text-sm text-secondary mt-1">Laporkan kendala — langsung masuk ke Super Admin ANTARQ.</p>
+          </header>
+          <section class="mx-4 mt-4 bg-white rounded-[22px] shadow-[0_4px_16px_rgba(0,0,0,0.04)] p-4">
+            <form id="help-form" class="space-y-3">
+              <div>
+                <label class="text-[11px] font-semibold tracking-wide text-on-surface-variant uppercase">Kategori</label>
+                <select name="category" class="mt-1 w-full h-12 px-3 rounded-xl border border-[#E5E7EB] bg-white">
+                  ${HELP_CATEGORIES.map(([id, label]) => `<option value="${id}">${esc(label)}</option>`).join("")}
+                </select>
+              </div>
+              <div>
+                <label class="text-[11px] font-semibold tracking-wide text-on-surface-variant uppercase">Subjek</label>
+                <input name="subject" required maxlength="120" placeholder="Contoh: GPS tidak akurat" class="mt-1 w-full h-12 px-3 rounded-xl border border-[#E5E7EB] bg-white"/>
+              </div>
+              <div>
+                <label class="text-[11px] font-semibold tracking-wide text-on-surface-variant uppercase">Nomor order (opsional)</label>
+                <input name="orderId" placeholder="ORD-..." class="mt-1 w-full h-12 px-3 rounded-xl border border-[#E5E7EB] bg-white"/>
+              </div>
+              <div>
+                <label class="text-[11px] font-semibold tracking-wide text-on-surface-variant uppercase">Deskripsi kendala</label>
+                <textarea name="body" required rows="4" placeholder="Jelaskan masalah yang Anda alami…" class="mt-1 w-full px-3 py-3 rounded-xl border border-[#E5E7EB] bg-white"></textarea>
+              </div>
+              ${helpError ? `<p class="text-sm text-red-600">${esc(helpError)}</p>` : ""}
+              ${helpMessage ? `<p class="text-sm text-[#15803D] font-medium">${esc(helpMessage)}</p>` : ""}
+              <button type="submit" ${helpBusy ? "disabled" : ""} class="w-full h-12 rounded-full bg-ink text-white font-semibold disabled:opacity-60">
+                ${helpBusy ? "Mengirim…" : "Kirim laporan"}
+              </button>
+            </form>
+          </section>
+          <section class="mx-4 mt-5">
+            <h2 class="font-bold text-lg px-1 mb-3">Riwayat laporan saya</h2>
+            ${list.length ? list.map((r) => `
+              <div class="bg-white rounded-[18px] shadow-[0_4px_16px_rgba(0,0,0,0.04)] p-4 mb-3">
+                <div class="flex items-start justify-between gap-3">
+                  <div class="min-w-0">
+                    <p class="font-semibold">${esc(r.subject)}</p>
+                    <p class="text-xs text-secondary mt-0.5">${esc(r.id)} · ${new Date(r.createdAt).toLocaleString("id-ID")}</p>
+                  </div>
+                  <span class="text-[11px] font-bold px-2 py-1 rounded-full bg-primary-fixed text-primary shrink-0">${esc(HELP_STATUS[r.status] || r.status)}</span>
+                </div>
+                <p class="text-sm text-on-surface-variant mt-2 whitespace-pre-wrap">${esc(r.body)}</p>
+                ${r.adminNote ? `<p class="text-sm mt-2 p-3 rounded-xl bg-[#F0FDF4] text-[#166534]"><strong>Balasan admin:</strong> ${esc(r.adminNote)}</p>` : ""}
+              </div>
+            `).join("") : `<p class="text-sm text-secondary px-1">Belum ada laporan.</p>`}
+          </section>
+        </div>`;
+    }
+
+        async function loadLeaflet() {
+      if (window.L) return true;
+      await new Promise((resolve) => {
+        const css = document.createElement("link");
+        css.rel = "stylesheet";
+        css.href = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
+        document.head.appendChild(css);
+        const s = document.createElement("script");
+        s.src = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
+        s.onload = resolve;
+        s.onerror = resolve;
+        document.head.appendChild(s);
+      });
+      return !!window.L;
+    }
+
+    async function mountAccountPicker() {
+      const host = document.getElementById("acct-map");
+      if (!host) return;
+      const coordEl = document.getElementById("acct-coords");
+      const liveEl = document.getElementById("acct-live-coords");
+      const errEl = document.getElementById("acct-gps-err");
+      const hintEl = document.getElementById("acct-gps-hint");
+      const startLat = Number(lastGps?.lat ?? profile?.lastLatitude ?? -3.3194);
+      const startLng = Number(lastGps?.lng ?? profile?.lastLongitude ?? 114.5921);
+      function showErr(msg) {
+        if (!errEl) return;
+        errEl.textContent = msg || "";
+        errEl.classList.toggle("hidden", !msg);
+      }
+      function showHint(msg) {
+        if (!hintEl) return;
+        hintEl.textContent = msg || "";
+        hintEl.classList.toggle("hidden", !msg);
+      }
+      function setCoords(lat, lng) {
+        const t = Number(lat).toFixed(5) + ", " + Number(lng).toFixed(5);
+        if (coordEl) coordEl.textContent = t;
+        if (liveEl) liveEl.textContent = t;
+      }
+      const ok = await loadLeaflet();
+      if (!ok || !window.L) {
+        showErr("Peta tidak bisa dimuat. Izinkan lokasi HP lalu simpan.");
+        return;
+      }
+      host.innerHTML = "";
+      const map = L.map(host, { zoomControl: true, attributionControl: false }).setView([startLat, startLng], 18);
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 19 }).addTo(map);
+      const sync = () => {
+        const c = map.getCenter();
+        setCoords(c.lat, c.lng);
+      };
+      map.on("move", sync);
+      map.on("moveend", sync);
+      map.on("click", (e) => {
+        if (e?.latlng) map.setView(e.latlng);
+      });
+      sync();
+      setTimeout(() => map.invalidateSize(), 80);
+      setTimeout(() => map.invalidateSize(), 320);
+      setTimeout(() => map.invalidateSize(), 400);
+
+      document.getElementById("acct-gps")?.addEventListener("click", () => {
+        const btn = document.getElementById("acct-gps");
+        if (!navigator.geolocation) {
+          showErr("GPS HP tidak tersedia. Geser peta secara manual.");
+          return;
+        }
+        showErr("");
+        if (btn) btn.innerHTML = `${icon("my_location", "text-primary text-[18px]")} Membaca GPS…`;
+        navigator.geolocation.getCurrentPosition(
+          (pos) => {
+            map.setView([pos.coords.latitude, pos.coords.longitude], 18);
+            setCoords(pos.coords.latitude, pos.coords.longitude);
+            showHint("GPS HP dipakai. Geser sedikit jika pin belum tepat.");
+            if (btn) btn.innerHTML = `${icon("my_location", "text-primary text-[18px]")} Lokasi HP`;
+          },
+          (e) => {
+            const msg =
+              e.code === 1
+                ? "Izinkan lokasi di browser, lalu coba lagi."
+                : e.code === 3
+                  ? "GPS terlalu lama. Geser peta sampai pin tepat."
+                  : "Tidak bisa membaca GPS. Geser peta secara manual.";
+            showErr(msg);
+            if (btn) btn.innerHTML = `${icon("my_location", "text-primary text-[18px]")} Lokasi HP`;
+          },
+          { enableHighAccuracy: true, timeout: 15000 }
+        );
+      });
+
+      document.getElementById("acct-search")?.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const q = String(document.getElementById("acct-query")?.value || "").trim();
+        if (!q) return;
+        showErr("");
+        showHint("");
+        try {
+          const found = await api("/api/geo/geocode", {
+            method: "POST",
+            body: JSON.stringify({ address: q }),
+            timeoutMs: 15000,
+          });
+          map.setView([found.latitude, found.longitude], 18);
+          setCoords(found.latitude, found.longitude);
+          showHint(found.address || "Alamat ditemukan. Geser pin sampai tepat.");
+        } catch (err) {
+          showErr(err.message || "Alamat tidak ketemu. Ketuk peta atau pakai GPS.");
+        }
+      });
+
+      document.getElementById("acct-save")?.addEventListener("click", async () => {
+        const btn = document.getElementById("acct-save");
+        const c = map.getCenter();
+        if (btn) {
+          btn.disabled = true;
+          btn.textContent = "Menyimpan titik…";
+        }
+        showErr("");
+        showHint("");
+        try {
+          await api("/api/couriers/me/location", {
+            method: "POST",
+            body: JSON.stringify({
+              latitude: c.lat,
+              longitude: c.lng,
+              isOnline: !!profile?.isOnline,
+            }),
+          });
+          lastGps = { latitude: c.lat, longitude: c.lng, lat: c.lat, lng: c.lng };
+          if (profile) {
+            profile.lastLatitude = c.lat;
+            profile.lastLongitude = c.lng;
+          }
+          setCoords(c.lat, c.lng);
+          showCourierLocationPanel = false;
+          await go("/account");
+        } catch (err) {
+          showErr(err.message || "Gagal menyimpan lokasi");
+          if (btn) {
+            btn.disabled = false;
+            btn.textContent = "Simpan titik kurir";
+          }
+        }
+      });
+    }
+
+    async function fetchRoadRoute(fromLat, fromLng, toLat, toLng) {
+      const url =
+        "https://router.project-osrm.org/route/v1/driving/" +
+        fromLng + "," + fromLat + ";" + toLng + "," + toLat +
+        "?overview=full&geometries=geojson";
+      const res = await fetch(url);
+      const data = await res.json();
+      const coords = data?.routes?.[0]?.geometry?.coordinates;
+      if (!Array.isArray(coords) || coords.length < 2) return null;
+      return coords.map((c) => [c[1], c[0]]);
+    }
+
+    function bearingDeg(a, b) {
+      const lat1 = (a[0] * Math.PI) / 180;
+      const lat2 = (b[0] * Math.PI) / 180;
+      const dLng = ((b[1] - a[1]) * Math.PI) / 180;
+      const y = Math.sin(dLng) * Math.cos(lat2);
+      const x = Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1) * Math.cos(lat2) * Math.cos(dLng);
+      return ((Math.atan2(y, x) * 180) / Math.PI + 360) % 360;
+    }
+
+    function nearestRouteIndex(latlngs, lat, lng) {
+      let best = 0;
+      let bestD = Infinity;
+      for (let i = 0; i < latlngs.length; i++) {
+        const dLat = latlngs[i][0] - lat;
+        const dLng = latlngs[i][1] - lng;
+        const d = dLat * dLat + dLng * dLng;
+        if (d < bestD) {
+          bestD = d;
+          best = i;
+        }
+      }
+      return best;
+    }
+
+    function lerpLatLng(a, b, t) {
+      return [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t];
+    }
+
+    function riderIcon(heading) {
+      const rot = (heading || 0) - 90;
+      return L.divIcon({
+        className: "dk-rider-wrap",
+        iconSize: [52, 52],
+        iconAnchor: [26, 34],
+        html:
+          '<div class="dk-rider-spin" style="transform:rotate(' +
+          rot +
+          'deg)"><div class="dk-rider-bob">' +
+          icon("two_wheeler", "", true) +
+          "</div></div>",
+      });
+    }
+
+    function stopJobNav() {
+      if (jobNav?.raf) cancelAnimationFrame(jobNav.raf);
+      jobNav = null;
+    }
+
+    function setRiderPose(latlng, heading) {
+      if (!jobNav?.rider) return;
+      jobNav.display = latlng;
+      jobNav.heading = heading;
+      jobNav.rider.setLatLng(latlng);
+      jobNav.rider.setIcon(riderIcon(heading));
+    }
+
+    function updateJobRider(lat, lng, heading) {
+      if (!jobNav?.route?.length) return;
+      jobNav.gotGps = true;
+      const i = nearestRouteIndex(jobNav.route, lat, lng);
+      const snapped = jobNav.route[i];
+      jobNav.target = snapped;
+      jobNav.targetIndex = i;
+      if (heading == null || Number.isNaN(Number(heading))) {
+        const prev = jobNav.route[Math.max(0, i - 1)];
+        jobNav.targetHeading = bearingDeg(prev, snapped);
+      } else {
+        jobNav.targetHeading = Number(heading);
+      }
+    }
+
+    function tickJobNav(ts) {
+      if (!jobNav) return;
+      const dt = jobNav.lastTs ? Math.min(0.08, (ts - jobNav.lastTs) / 1000) : 0.016;
+      jobNav.lastTs = ts;
+
+      if (!jobNav.gotGps && jobNav.route.length > 1) {
+        jobNav.sim += dt * 18;
+        const pts = jobNav.route;
+        let dist = jobNav.sim;
+        let idx = 0;
+        while (idx < pts.length - 1) {
+          const dLat = pts[idx + 1][0] - pts[idx][0];
+          const dLng = pts[idx + 1][1] - pts[idx][1];
+          const step = Math.sqrt(dLat * dLat + dLng * dLng) * 111000;
+          if (dist <= step) {
+            const t = step ? dist / step : 0;
+            jobNav.target = lerpLatLng(pts[idx], pts[idx + 1], t);
+            jobNav.targetHeading = bearingDeg(pts[idx], pts[idx + 1]);
+            break;
+          }
+          dist -= step;
+          idx += 1;
+          if (idx >= pts.length - 1) {
+            jobNav.sim = 0;
+            jobNav.target = pts[0];
+          }
+        }
+      }
+
+      if (jobNav.target) {
+        const cur = jobNav.display || jobNav.target;
+        const next = lerpLatLng(cur, jobNav.target, Math.min(1, dt * 4));
+        let head = jobNav.heading || 0;
+        const want = jobNav.targetHeading || head;
+        let diff = ((want - head + 540) % 360) - 180;
+        head += diff * Math.min(1, dt * 5);
+        setRiderPose(next, head);
+        if (jobNav.follow) jobNav.map.panTo(next, { animate: true, duration: 0.4 });
+      }
+      jobNav.raf = requestAnimationFrame(tickJobNav);
+    }
+
+    async function mountMap(elId, lat, lng, from) {
+      const el = document.getElementById(elId);
+      if (!el || lat == null || lng == null || Number.isNaN(Number(lat))) return;
+      stopJobNav();
+      try {
+        const ok = await loadLeaflet();
+        const destLat = Number(lat);
+        const destLng = Number(lng);
+        const fromLat = from?.lat != null ? Number(from.lat) : Number(lastGps?.lat ?? profile?.lastLatitude ?? destLat);
+        const fromLng = from?.lng != null ? Number(from.lng) : Number(lastGps?.lng ?? profile?.lastLongitude ?? destLng);
+        if (!ok || !window.L) {
+          const bbox = [destLng - 0.01, destLat - 0.007, destLng + 0.01, destLat + 0.007].join(",");
+          el.innerHTML = `<iframe class="w-full h-full border-0" src="https://www.openstreetmap.org/export/embed.html?bbox=${bbox}&layer=mapnik&marker=${destLat},${destLng}"></iframe>`;
+          return;
+        }
+        el.innerHTML = "";
+        const map = L.map(el, { zoomControl: false }).setView([fromLat, fromLng], 16);
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 19 }).addTo(map);
+        map.on("dragstart", () => {
+          if (jobNav) jobNav.follow = false;
+        });
+        L.marker([destLat, destLng]).addTo(map);
+
+        let route = [[fromLat, fromLng], [destLat, destLng]];
+        try {
+          const road = await fetchRoadRoute(fromLat, fromLng, destLat, destLng);
+          if (road?.length) route = road;
+        } catch (_) {}
+
+        L.polyline(route, { color: "#bbf7d0", weight: 10, opacity: 0.9, lineCap: "round", lineJoin: "round" }).addTo(map);
+        L.polyline(route, { color: "#16a34a", weight: 5, opacity: 1, lineCap: "round", lineJoin: "round" }).addTo(map);
+        map.fitBounds(route, { padding: [40, 80] });
+
+        const start = route[0];
+        const head0 = route.length > 1 ? bearingDeg(route[0], route[1]) : 0;
+        const rider = L.marker(start, { icon: riderIcon(head0), zIndexOffset: 600 }).addTo(map);
+
+        jobNav = {
+          map,
+          rider,
+          route,
+          display: start,
+          heading: head0,
+          target: start,
+          targetHeading: head0,
+          gotGps: false,
+          sim: 0,
+          follow: true,
+          lastTs: 0,
+          raf: requestAnimationFrame(tickJobNav),
+        };
+        if (lastGps?.lat != null) updateJobRider(lastGps.lat, lastGps.lng, null);
+        setTimeout(() => map.invalidateSize(), 120);
+        return map;
+      } catch (_) {}
+    }
+
+    async function setOnline(on) {
+      await api("/api/couriers/me/online", { method: "POST", body: JSON.stringify({ isOnline: on, ...(lastGps || {}) }) });
+      profile = await api("/api/couriers/me");
+      if (on) startGps(); else stopGps();
+    }
+
+    function stopGps() {
+      if (watchId != null) {
+        navigator.geolocation.clearWatch(watchId);
+        watchId = null;
+      }
+    }
+
+    function startGps() {
+      if (!navigator.geolocation) return;
+      if (watchId != null) return;
+      watchId = navigator.geolocation.watchPosition(
+        async (p) => {
+          lastGps = { latitude: p.coords.latitude, longitude: p.coords.longitude, lat: p.coords.latitude, lng: p.coords.longitude };
+          const line = document.getElementById("gps-line");
+          if (line) line.textContent = "GPS aktif · " + lastGps.lat.toFixed(4) + ", " + lastGps.lng.toFixed(4);
+          updateJobRider(lastGps.lat, lastGps.lng, p.coords.heading);
+          if (Date.now() - lastGpsPostAt < 8000) return;
+          lastGpsPostAt = Date.now();
+          api("/api/couriers/me/location", {
+            method: "POST",
+            body: JSON.stringify({ latitude: lastGps.lat, longitude: lastGps.lng, isOnline: true }),
+          }).catch(() => {});
+        },
+        () => {},
+        { enableHighAccuracy: true, maximumAge: 4000 }
+      );
+    }
+
+    async function loadLists() {
+      const [available, mine] = await Promise.all([
+        api("/api/couriers/me/available-orders").catch(() => []),
+        api("/api/orders").catch(() => []),
+      ]);
+      return {
+        available: Array.isArray(available) ? available : [],
+        mine: Array.isArray(mine) ? mine : [],
+      };
+    }
+
+    async function runKtpOcr() {
+      if (!ktpDataUrl) return;
+      ktpOcrLoading = true;
+      ktpOcrNote = "";
+      bindAuthPages();
+      try {
+        const enteredName = document.querySelector('#register-form [name="fullName"]')?.value || draftReg.fullName || "";
+        const data = await api("/api/auth/ktp-ocr", {
+          method: "POST",
+          body: JSON.stringify({
+            ktpPhotoUrl: ktpDataUrl,
+            fullName: enteredName,
+            nik: ktpDraft.nik,
+          }),
+        });
+        ktpDraft = {
+          nik: data.ocr?.nik || ktpDraft.nik || "",
+          fullName: data.ocr?.fullName || enteredName || ktpDraft.fullName || "",
+          placeOfBirth: data.ocr?.placeOfBirth || "",
+          dateOfBirth: data.ocr?.dateOfBirth || "",
+          address: data.ocr?.address || "",
+          fullNameFromOcr: data.ocr?.fullName || "",
+          ocrConfidence: Number(data.ocr?.confidence || 0),
+        };
+        ktpMismatches = Array.isArray(data.mismatches) ? data.mismatches : [];
+        ktpOcrNote = data.ocr?.note || data.message || "";
+      } catch (err) {
+        ktpOcrNote = err.message || "OCR gagal — isi NIK dan nama manual.";
+        ktpMismatches = [];
+      } finally {
+        ktpOcrLoading = false;
+        bindAuthPages();
+      }
+    }
+
+    function compressKtp(file) {
+      return new Promise((resolve, reject) => {
+        if (!file || !file.type.startsWith("image/")) {
+          reject(new Error("File harus berupa foto"));
+          return;
+        }
+        const img = new Image();
+        const url = URL.createObjectURL(file);
+        img.onload = () => {
+          const max = 1400;
+          let w = img.width;
+          let h = img.height;
+          if (w > max || h > max) {
+            const scale = Math.min(max / w, max / h);
+            w = Math.round(w * scale);
+            h = Math.round(h * scale);
+          }
+          const canvas = document.createElement("canvas");
+          canvas.width = w;
+          canvas.height = h;
+          canvas.getContext("2d").drawImage(img, 0, 0, w, h);
+          URL.revokeObjectURL(url);
+          resolve(canvas.toDataURL("image/jpeg", 0.82));
+        };
+        img.onerror = () => {
+          URL.revokeObjectURL(url);
+          reject(new Error("Foto KTP tidak bisa dibaca"));
+        };
+        img.src = url;
+      });
+    }
+
+    function bindAuthPages() {
+      paintNav("");
+      const app = document.getElementById("app");
+      app.innerHTML = pageLogin();
+      document.getElementById("toggle-pw")?.addEventListener("click", () => {
+        showPass = !showPass;
+        const pw = document.getElementById("pw");
+        if (pw) pw.type = showPass ? "text" : "password";
+        const btn = document.getElementById("toggle-pw");
+        if (btn) btn.innerHTML = icon(showPass ? "visibility" : "visibility_off");
+      });
+      document.getElementById("back-login")?.addEventListener("click", (e) => {
+        e.preventDefault();
+        authView = "login";
+        go("/login");
+      });
+      document.getElementById("ktp-file")?.addEventListener("change", async (ev) => {
+        const file = ev.target.files?.[0];
+        if (!file) return;
+        try {
+          ktpDataUrl = await compressKtp(file);
+          const img = document.getElementById("ktp-preview");
+          const wrap = document.getElementById("ktp-preview-wrap");
+          if (img) img.src = ktpDataUrl;
+          wrap?.classList.remove("hidden");
+          await runKtpOcr();
+        } catch (err) {
+          loginErr = err.message || "Foto KTP gagal dibaca";
+          bindAuthPages();
+        }
+      });
+      document.getElementById("register-form")?.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const fd = new FormData(e.target);
+        const verifiedName = String(fd.get("ktpFullName") || fd.get("fullName") || "").trim();
+        draftReg = {
+          fullName: verifiedName,
+          phone: String(fd.get("phone") || ""),
+          email: String(fd.get("email") || ""),
+          password: String(fd.get("password") || ""),
+        };
+        loginErr = "";
+        if (!ktpDataUrl) {
+          loginErr = "Unggah foto KTP yang jelas dulu.";
+          bindAuthPages();
+          return;
+        }
+        const nik = String(fd.get("ktpNik") || "").replace(/\D/g, "");
+        if (!nik || nik.length !== 16) {
+          loginErr = "NIK wajib 16 digit setelah verifikasi KTP.";
+          bindAuthPages();
+          return;
+        }
+        if (!verifiedName || verifiedName.split(/\s+/).length < 2) {
+          loginErr = "Nama sesuai KTP wajib minimal dua kata.";
+          bindAuthPages();
+          return;
+        }
+        try {
+          const data = await api("/api/auth/register-courier", {
+            method: "POST",
+            body: JSON.stringify({
+              fullName: verifiedName,
+              phone: fd.get("phone"),
+              email: fd.get("email"),
+              password: fd.get("password"),
+              ktpPhotoUrl: ktpDataUrl,
+              nik,
+              placeOfBirth: fd.get("ktpPlace"),
+              dateOfBirth: fd.get("ktpDob"),
+              addressOnKtp: fd.get("ktpAddress"),
+              fullNameFromOcr: ktpDraft.fullNameFromOcr || ktpDraft.fullName,
+              ocrConfidence: ktpDraft.ocrConfidence,
+            }),
+          });
+            ktpDataUrl = "";
+            ktpDraft = { nik: "", fullName: "", placeOfBirth: "", dateOfBirth: "", address: "", fullNameFromOcr: "", ocrConfidence: 0 };
+            ktpMismatches = [];
+            ktpOcrNote = "";
+            draftReg.fullName = "";
+            pendingMsg = data.message;
+          authView = "pending";
+          go("/pending");
+        } catch (err) {
+          loginErr = err.message;
+          bindAuthPages();
+        }
+      });
+      document.getElementById("ktp-complete")?.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const fd = new FormData(e.target);
+        loginErr = "";
+        if (!ktpDataUrl) {
+          loginErr = "Pilih foto KTP yang jelas dulu.";
+          bindAuthPages();
+          return;
+        }
+        try {
+          const data = await api("/api/auth/courier-ktp", {
+            method: "POST",
+            body: JSON.stringify({
+              email: fd.get("email"),
+              password: fd.get("password"),
+              ktpPhotoUrl: ktpDataUrl,
+            }),
+          });
+          pendingMsg = data.message;
+          loginErr = "";
+          bindAuthPages();
+        } catch (err) {
+          loginErr = err.message;
+          bindAuthPages();
+        }
+      });
+      document.getElementById("login-form")?.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const fd = new FormData(e.target);
+        loginErr = "";
+        try {
+          const data = await api("/api/auth/login", {
+            method: "POST",
+            body: JSON.stringify({ email: fd.get("email"), password: fd.get("password") }),
+          });
+          if (data.user.role !== "COURIER" && data.user.role !== "ADMIN") throw new Error("Pakai akun kurir");
+          token = data.token;
+          user = data.user;
+          localStorage.setItem("dk_courier_token", token);
+          localStorage.setItem("dk_courier_user", JSON.stringify(user));
+          go("/home");
+        } catch (err) {
+          loginErr = err.message;
+          if (/menunggu persetujuan/i.test(String(err.message))) {
+            draftReg.email = String(fd.get("email") || "");
+            draftReg.password = String(fd.get("password") || "");
+            pendingMsg = err.message;
+            authView = "pending";
+            go("/pending");
+            return;
+          }
+          bindAuthPages();
+        }
+      });
+    }
+
+    function bindAccountEdit() {
+      const errEl = document.getElementById("acct-edit-err");
+      document.getElementById("acct-edit-open")?.addEventListener("click", () => {
+        editingCourierProfile = true;
+        courierProfileError = "";
+        go("/account");
+      });
+      document.getElementById("acct-edit-cancel")?.addEventListener("click", () => {
+        editingCourierProfile = false;
+        courierProfileError = "";
+        go("/account");
+      });
+      document.getElementById("open-location")?.addEventListener("click", () => {
+        showCourierLocationPanel = !showCourierLocationPanel;
+        if (showCourierLocationPanel) showCourierPriorityPanel = false;
+        go("/account").then(() => {
+          if (!showCourierLocationPanel) return;
+          const panel = document.getElementById("location-panel");
+          panel?.scrollIntoView({ behavior: "smooth", block: "start" });
+        });
+      });
+      document.getElementById("go-earnings")?.addEventListener("click", () => {
+        go("/earnings");
+      });
+      document.getElementById("go-priority")?.addEventListener("click", () => {
+        showCourierPriorityPanel = true;
+        showCourierLocationPanel = false;
+        go("/account").then(() => {
+          const panel = document.getElementById("priority-panel");
+          panel?.scrollIntoView({ behavior: "smooth", block: "start" });
+        });
+      });
+      document.getElementById("close-priority")?.addEventListener("click", () => {
+        showCourierPriorityPanel = false;
+        go("/account");
+      });
+      document.getElementById("buy-priority")?.addEventListener("click", async () => {
+        const btn = document.getElementById("buy-priority");
+        if (btn?.dataset.busy === "1") return;
+        const fee = profile?.priorityFee || 25000;
+        const label = profile?.priorityLabel || ((profile?.priorityDays || 7) + " hari");
+        const bank = (profile?.payoutAccount?.bankName || "BCA") + " " + (profile?.payoutAccount?.accountNumber || "");
+        const proof = window.__priorityProofUrl || "";
+        if (!proof.startsWith("data:image/")) {
+          alert("Ambil foto bukti transfer dulu.");
+          return;
+        }
+        if (!confirm("Kirim pengajuan prioritas " + rupiah(fee) + " / " + label + " ke " + bank + " beserta bukti transfer?")) return;
+        if (btn) { btn.dataset.busy = "1"; btn.textContent = "Mengirim…"; }
+        try {
+          await api("/api/couriers/me/priority", {
+            method: "POST",
+            body: JSON.stringify({ confirmPay: true, proofUrl: proof }),
+          });
+          window.__priorityProofUrl = "";
+          lastProfileAt = 0;
+          profile = await api("/api/couriers/me");
+          showCourierPriorityPanel = true;
+          go("/account");
+        } catch (e) {
+          alert(e.message || "Gagal mengirim pengajuan");
+          if (btn) { btn.dataset.busy = "0"; btn.textContent = "Kirim pengajuan"; }
+        }
+      });
+      document.getElementById("priority-proof-input")?.addEventListener("change", async (e) => {
+        const file = e.target.files && e.target.files[0];
+        e.target.value = "";
+        if (!file || !file.type.startsWith("image/")) {
+          alert("Bukti transfer harus berupa foto");
+          return;
+        }
+        try {
+          const dataUrl = await new Promise((resolve, reject) => {
+            const img = new Image();
+            const url = URL.createObjectURL(file);
+            img.onload = () => {
+              const max = 1400;
+              let w = img.width;
+              let h = img.height;
+              if (w > max || h > max) {
+                const scale = Math.min(max / w, max / h);
+                w = Math.round(w * scale);
+                h = Math.round(h * scale);
+              }
+              const canvas = document.createElement("canvas");
+              canvas.width = w;
+              canvas.height = h;
+              canvas.getContext("2d").drawImage(img, 0, 0, w, h);
+              URL.revokeObjectURL(url);
+              resolve(canvas.toDataURL("image/jpeg", 0.82));
+            };
+            img.onerror = () => {
+              URL.revokeObjectURL(url);
+              reject(new Error("Foto tidak bisa dibaca"));
+            };
+            img.src = url;
+          });
+          window.__priorityProofUrl = dataUrl;
+          const preview = document.getElementById("priority-proof-preview");
+          const empty = document.getElementById("priority-proof-empty");
+          const box = document.getElementById("priority-proof-box");
+          if (preview) {
+            preview.src = dataUrl;
+            preview.classList.remove("hidden");
+          }
+          if (empty) empty.classList.add("hidden");
+          if (box) {
+            box.classList.remove("border-dashed", "border-[#D1D5DB]", "bg-[#F3F4F6]");
+            box.classList.add("border-primary", "bg-[#F0FDF4]");
+          }
+        } catch (err) {
+          alert(err.message || "Gagal membaca foto");
+        }
+      });
+      document.querySelectorAll(".copy-payout").forEach((btn) => {
+        btn.addEventListener("click", async () => {
+          const text = btn.getAttribute("data-copy") || "";
+          if (!text) return;
+          try { await navigator.clipboard.writeText(text); } catch (_) {}
+          const prev = btn.textContent;
+          btn.textContent = "Tersalin";
+          setTimeout(() => { btn.textContent = prev; }, 1200);
+        });
+      });
+      document.getElementById("go-orders")?.addEventListener("click", () => {
+        go("/orders");
+      });
+      const toggleBtn = document.getElementById("toggle-online");
+      if (toggleBtn && !toggleBtn.dataset.bound) {
+        toggleBtn.dataset.bound = "1";
+        toggleBtn.addEventListener("click", async () => {
+          if (toggleBtn.dataset.busy === "1") return;
+          toggleBtn.dataset.busy = "1";
+          try {
+            const next = !profile?.isOnline;
+            try { navigator.vibrate?.(next ? [18, 40, 28] : [48]); } catch (_) {}
+            await setOnline(next);
+            lastProfileAt = 0;
+            lastHomeSig = "";
+            await go("/account");
+          } catch (e) {
+            alert(e.message || "Gagal ubah status");
+          } finally {
+            toggleBtn.dataset.busy = "0";
+          }
+        });
+      }
+      document.getElementById("acct-edit")?.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const fullName = String(document.getElementById("acct-name")?.value || "").trim();
+        const phone = String(document.getElementById("acct-phone")?.value || "").trim();
+        if (!fullName) {
+          courierProfileError = "Nama wajib diisi";
+          go("/account");
+          return;
+        }
+        const btn = document.getElementById("acct-edit-save");
+        if (btn) {
+          btn.disabled = true;
+          btn.textContent = "Menyimpan…";
+        }
+        try {
+          const updated = await api("/api/couriers/me/profile", {
+            method: "PATCH",
+            body: JSON.stringify({ fullName, phone }),
+          });
+          profile = { ...profile, ...updated };
+          if (user) {
+            user.displayName = fullName;
+            localStorage.setItem("dk_courier_user", JSON.stringify(user));
+          }
+          lastProfileAt = 0;
+          editingCourierProfile = false;
+          courierProfileError = "";
+          go("/account");
+        } catch (err) {
+          courierProfileError = err.message || "Gagal menyimpan";
+          if (errEl) {
+            errEl.textContent = courierProfileError;
+            errEl.classList.remove("hidden");
+          }
+        } finally {
+          if (btn) {
+            btn.disabled = false;
+            btn.textContent = "Simpan";
+          }
+        }
+      });
+    }
+
+    function bindCourierChrome() {
+      const toggleBtn = document.getElementById("toggle-online");
+      // Di halaman Akun, toggle sudah di-bind lewat bindAccountEdit (hindari double handler).
+      if (!toggleBtn || toggleBtn.dataset.bound === "1") return;
+      toggleBtn.addEventListener("click", async () => {
+        if (toggleBtn.dataset.busy === "1") return;
+        toggleBtn.dataset.busy = "1";
+        try {
+          await setOnline(!profile?.isOnline);
+          lastProfileAt = 0;
+          lastHomeSig = "";
+          route();
+        } catch (e) {
+          alert(e.message || "Gagal ubah status");
+        } finally {
+          toggleBtn.dataset.busy = "0";
+        }
+      });
+    }
+
+    async function refreshListsQuiet() {
+      const hash = location.hash || "";
+      if (!hash.includes("home") && !hash.includes("orders") && hash !== "" && hash !== "#") return;
+      try {
+        const { available, mine } = await loadLists();
+        const sig = JSON.stringify({
+          on: profile?.isOnline,
+          a: (available || []).map((o) => o.id),
+          m: (mine || []).filter((o) => isActive(o.status)).map((o) => o.id + ":" + o.status),
+        });
+        if (sig === lastHomeSig) return;
+        lastHomeSig = sig;
+        const parts = hash.replace(/^#/, "").split("/").filter(Boolean);
+        const app = document.getElementById("app");
+        const y = app.scrollTop;
+        if (parts[0] === "orders") app.innerHTML = pageOrders(available, mine);
+        else app.innerHTML = pageHome(available, mine);
+        app.scrollTop = y;
+        bindCourierChrome();
+      } catch (_) {}
+    }
+
+    async function route() {
+      const gen = ++routeGen;
+      stopJobNav();
+      if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
+      if (offerTimer) { clearInterval(offerTimer); offerTimer = null; }
+      if (chatTimer) { clearInterval(chatTimer); chatTimer = null; }
+      const app = document.getElementById("app");
+      const hash = (location.hash || "#/home").replace(/^#/, "");
+      const parts = hash.split("/").filter(Boolean);
+      const authPage = ["login", "register", "pending"].includes(parts[0]);
+
+      if (!token) {
+        authView = authPage ? parts[0] : "login";
+        bindAuthPages();
+        if (!authPage && (location.hash || "") !== "#/login") location.hash = "#/login";
+        return;
+      }
+      if (authPage) {
+        go("/home");
+        return;
+      }
+
+      try {
+        if (!profile || Date.now() - lastProfileAt > 12000) {
+          profile = await api("/api/couriers/me");
+          lastProfileAt = Date.now();
+        }
+      } catch (err) {
+        token = "";
+        localStorage.removeItem("dk_courier_token");
+        loginErr = err.message || "Sesi habis. Masuk ulang.";
+        go("/login");
+        return;
+      }
+      if (gen !== routeGen) return;
+      if (profile.isOnline) startGps();
+
+      if (parts[0] === "offer") {
+        paintNav("");
+        const orderId = parts[1];
+        let order = await api("/api/orders/" + encodeURIComponent(orderId));
+        try {
+          const available = await api("/api/couriers/me/available-orders");
+          const hit = (available || []).find((o) => o.id === orderId);
+          if (hit?.offer) order = { ...order, offer: hit.offer };
+          else if (!hit) {
+            alert("Penawaran ini sudah tidak untukmu (kurir lain lebih dekat, atau waktu habis).");
+            go("/home");
+            return;
+          }
+        } catch (_) {}
+        app.innerHTML = pageOffer(order);
+        const acceptBtn = document.getElementById("accept-order");
+        const decline = async () => {
+          try {
+            await api("/api/orders/" + encodeURIComponent(order.id) + "/courier-decline", {
+              method: "POST",
+              body: JSON.stringify({}),
+            });
+          } catch (_) {}
+          go("/home");
+        };
+        document.getElementById("decline-order")?.addEventListener("click", decline);
+        document.getElementById("decline-order-2")?.addEventListener("click", decline);
+        acceptBtn?.addEventListener("click", async () => {
+          if (acceptBtn.dataset.busy === "1") return;
+          acceptBtn.dataset.busy = "1";
+          acceptBtn.textContent = "Memproses…";
+          if (offerTimer) { clearInterval(offerTimer); offerTimer = null; }
+          try {
+            await api("/api/orders/" + encodeURIComponent(order.id) + "/assign-courier", {
+              method: "POST",
+              body: JSON.stringify({}),
+              timeoutMs: 20000,
+            });
+            await api("/api/orders/" + encodeURIComponent(order.id) + "/courier-status", {
+              method: "POST",
+              body: JSON.stringify({ status: "COURIER_GOING_TO_OUTLET" }),
+              timeoutMs: 20000,
+            });
+            const jobHash = "#/job/" + encodeURIComponent(order.id);
+            showSuccessOverlay({
+              title: "Pesanan diterima!",
+              message: "Mulai menuju warung untuk mengambil pesanan.",
+              onDone: () => { location.hash = jobHash; },
+            });
+          } catch (err) {
+            acceptBtn.dataset.busy = "0";
+            acceptBtn.textContent = "Terima";
+            alert(err.message || "Gagal menerima order");
+          }
+        });
+        const dest = order.merchants?.[0]?.merchant;
+        try {
+          await mountMap(
+            "job-map",
+            dest?.latitude || lastGps?.lat,
+            dest?.longitude || lastGps?.lng,
+            lastGps ? { lat: lastGps.lat, lng: lastGps.lng } : null
+          );
+        } catch (_) {}
+        let timeLeft = Number(order.offer?.ttlSec ?? 45);
+        const totalTime = Number(order.offer?.offerTtlSec ?? 45);
+        const timerText = document.getElementById("timer-text");
+        const timerRing = document.getElementById("timer-ring");
+        const circumference = 2 * Math.PI * 40;
+        if (timerText) timerText.textContent = String(Math.max(timeLeft, 0));
+        if (timerRing) timerRing.style.strokeDashoffset = String(circumference - (Math.max(timeLeft, 0) / totalTime) * circumference);
+        offerTimer = setInterval(async () => {
+          timeLeft--;
+          if (timerText) timerText.textContent = String(Math.max(timeLeft, 0));
+          if (timerRing) timerRing.style.strokeDashoffset = String(circumference - (Math.max(timeLeft, 0) / totalTime) * circumference);
+          if (timeLeft <= 10) {
+            timerRing?.classList.add("text-[#ba1a1a]");
+            timerRing?.classList.remove("text-primary");
+            timerText?.classList.add("text-[#ba1a1a]");
+            timerText?.classList.remove("text-primary");
+          }
+          if (timeLeft <= 0) {
+            clearInterval(offerTimer);
+            offerTimer = null;
+            if (timerText) timerText.textContent = "—";
+            // TTL habis → backend cascade ke kurir #2 saat poll berikutnya.
+            go("/home");
+          }
+        }, 1000);
+        return;
+      }
+
+      if (parts[0] === "job") {
+        paintNav("");
+        const order = await api("/api/orders/" + encodeURIComponent(parts[1]));
+        app.innerHTML = pageJob(order);
+        const nextBtn = document.getElementById("job-next");
+        nextBtn?.addEventListener("click", async () => {
+          if (nextBtn.dataset.busy === "1") return;
+          nextBtn.dataset.busy = "1";
+          try {
+            const latest = await api("/api/orders/" + encodeURIComponent(order.id));
+            if (goingOutlet(latest.status)) {
+              if (!foodReady(latest)) {
+                nextBtn.dataset.busy = "0";
+                alert("Tunggu dapur menandai pesanan siap diambil");
+                return;
+              }
+              await api("/api/orders/" + encodeURIComponent(order.id) + "/courier-status", { method: "POST", body: JSON.stringify({ status: "PICKED_UP" }) });
+              await api("/api/orders/" + encodeURIComponent(order.id) + "/courier-status", { method: "POST", body: JSON.stringify({ status: "DELIVERING" }) });
+              route();
+              return;
+            }
+            if (latest.status !== "DELIVERED") {
+              await api("/api/orders/" + encodeURIComponent(order.id) + "/courier-status", { method: "POST", body: JSON.stringify({ status: "DELIVERED" }) });
+            }
+            await api("/api/orders/" + encodeURIComponent(order.id) + "/complete", { method: "POST", body: JSON.stringify({}) });
+            const earn = latest.courierEarning || latest.deliveryFee || order.courierEarning || 0;
+            const total = latest.grandTotal || order.grandTotal || 0;
+            showSuccessOverlay({
+              title: "BERHASIL!",
+              message: "Pembayaran tunai sudah diterima. Ongkir kamu " + rupiah(earn) + ".",
+              amountLabel: rupiah(total),
+              onDone: () => go("/home"),
+            });
+          } catch (err) {
+            nextBtn.dataset.busy = "0";
+            alert(err.message || "Gagal update order");
+          }
+        });
+        const dest = goingOutlet(order.status)
+          ? order.merchants?.[0]?.merchant
+          : { latitude: order.deliveryLatitude, longitude: order.deliveryLongitude };
+        try {
+          await mountMap(
+            "job-map",
+            dest?.latitude || lastGps?.lat,
+            dest?.longitude || lastGps?.lng,
+            lastGps ? { lat: lastGps.lat, lng: lastGps.lng } : null
+          );
+        } catch (_) {}
+        document.getElementById("recenter")?.addEventListener("click", () => {
+          if (!jobNav?.map) return;
+          jobNav.follow = true;
+          if (jobNav.display) jobNav.map.setView(jobNav.display, 17);
+        });
+        const maps = document.getElementById("maps-link");
+        if (maps && dest?.latitude) maps.href = `https://www.google.com/maps/dir/?api=1&destination=${dest.latitude},${dest.longitude}`;
+        bindOrderChat(order, "COURIER", customerName(order), [
+          "Saya sudah di lokasi",
+          "Mohon tunggu sebentar",
+          "Pesanan sudah dijemput",
+        ]);
+        document.getElementById("open-chat-2")?.addEventListener("click", () => document.getElementById("open-chat")?.click());
+        pollTimer = setInterval(async () => {
+          try {
+            const latest = await api("/api/orders/" + encodeURIComponent(order.id));
+            const btn = document.getElementById("job-next");
+            if (btn && goingOutlet(latest.status)) {
+              const label = btn.querySelector("span");
+              if (label) label.textContent = foodReady(latest) ? "Konfirmasi pickup" : "Menunggu dapur siap";
+            }
+          } catch (_) {}
+        }, 4000);
+        return;
+      }
+
+      if (parts[0] === "help") {
+        const reports = await api("/api/support-reports/me");
+        if (gen !== routeGen) return;
+        app.innerHTML = pageHelp(reports);
+        document.getElementById("help-form")?.addEventListener("submit", async (e) => {
+          e.preventDefault();
+          if (helpBusy) return;
+          helpBusy = true;
+          helpError = "";
+          helpMessage = "";
+          route().catch(showBootError);
+          const fd = new FormData(e.target);
+          try {
+            const res = await api("/api/support-reports", {
+              method: "POST",
+              body: JSON.stringify({
+                category: fd.get("category"),
+                subject: fd.get("subject"),
+                body: fd.get("body"),
+                orderId: fd.get("orderId") || undefined,
+              }),
+            });
+            helpMessage = res.message || "Laporan terkirim.";
+            helpBusy = false;
+            route().catch(showBootError);
+          } catch (err) {
+            helpError = err.message || "Gagal mengirim laporan";
+            helpBusy = false;
+            route().catch(showBootError);
+          }
+        });
+        bindCourierChrome();
+        paintNav(null);
+        return;
+      }
+
+      const { available, mine } = await loadLists();
+      if (gen !== routeGen) return;
+      lastHomeSig = JSON.stringify({
+        on: profile?.isOnline,
+        a: (available || []).map((o) => o.id),
+        m: (mine || []).filter((o) => isActive(o.status)).map((o) => o.id + ":" + o.status),
+      });
+      if (parts[0] === "orders") app.innerHTML = pageOrders(available, mine);
+      else if (parts[0] === "earnings") app.innerHTML = pageEarnings(mine);
+      else if (parts[0] === "account") {
+        app.innerHTML = pageAccount();
+        bindAccountEdit();
+        if (showCourierLocationPanel) await mountAccountPicker();
+        document.getElementById("logout")?.addEventListener("click", () => {
+          stopGps();
+          token = ""; user = null; profile = null;
+          lastProfileAt = 0;
+          editingCourierProfile = false;
+          showCourierLocationPanel = false;
+          localStorage.removeItem("dk_courier_token");
+          localStorage.removeItem("dk_courier_user");
+          go("/login");
+        });
+      } else app.innerHTML = pageHome(available, mine);
+
+      bindCourierChrome();
+      paintNav("#/" + (parts[0] || "home"));
+      if (parts[0] === "home" || parts[0] === "orders" || !parts[0]) {
+        pollTimer = setInterval(refreshListsQuiet, 10000);
+      }
+    }
+
+    window.addEventListener("hashchange", () => {
+      route().catch(showBootError);
+    });
+    if (!location.hash) location.hash = token ? "#/home" : "#/login";
+    const splashEl = document.getElementById("dk-splash");
+    const splashMin = new Promise((resolve) => setTimeout(resolve, 1800));
+    Promise.all([route().catch(showBootError), splashMin]).then(() => {
+      if (!splashEl) return;
+      splashEl.classList.add("is-leave");
+      splashEl.setAttribute("aria-busy", "false");
+      setTimeout(() => splashEl.remove(), 400);
+    });
+
+    function showBootError(err) {
+      token = "";
+      try {
+        localStorage.removeItem("dk_courier_token");
+        localStorage.removeItem("dk_courier_user");
+      } catch (_) {}
+      paintStandaloneLogin(err && err.message ? err.message : "Gagal memuat. Masuk ulang di bawah.");
+    }
+  </script>
+</body>
+</html>

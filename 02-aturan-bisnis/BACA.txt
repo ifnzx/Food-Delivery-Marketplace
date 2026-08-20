@@ -1,0 +1,9 @@
+Folder ini berisi rumus yang dikunci:
+
+- Komisi platform 15% dari harga makanan
+- Ongkir Rp2.000 per km
+- Tidak ada service fee customer
+- Pembayaran MVP: CASH
+- Ongkir milik kurir
+
+File utama: businessRules.ts

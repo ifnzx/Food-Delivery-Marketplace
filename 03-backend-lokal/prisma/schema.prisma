@@ -1,0 +1,267 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:../../04-database/local.db"
+}
+
+model User {
+  id           String   @id
+  email        String   @unique
+  passwordHash String
+  displayName  String
+  phone        String
+  role         String
+  status       String   @default("ACTIVE")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  customer Customer?
+  merchant Merchant?
+  courier  Courier?
+}
+
+model Customer {
+  id        String   @id
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id])
+  fullName  String
+  phone     String
+  address   String
+  latitude  Float
+  longitude Float
+  status    String   @default("ACTIVE")
+  createdAt DateTime @default(now())
+  orders    Order[]
+}
+
+model Merchant {
+  id                String   @id
+  userId            String   @unique
+  user              User     @relation(fields: [userId], references: [id])
+  name              String
+  description       String
+  phone             String
+  address           String
+  photoUrl          String   @default("")
+  latitude          Float
+  longitude         Float
+  isOpen            Boolean  @default(true)
+  status            String   @default("ACTIVE")
+  suspensionState   String?
+  commissionRate    Float    @default(0.15)
+  outstandingAmount Int      @default(0)
+  outstandingSince  DateTime?
+  createdAt         DateTime @default(now())
+  menus             Menu[]
+  orderMerchants    OrderMerchant[]
+  settlements       MerchantSettlement[]
+}
+
+model Courier {
+  id              String   @id
+  userId          String   @unique
+  user            User     @relation(fields: [userId], references: [id])
+  fullName        String
+  phone           String
+  ktpPhotoUrl     String   @default("")
+  nik             String   @default("")
+  placeOfBirth    String   @default("")
+  dateOfBirth     String   @default("")
+  addressOnKtp    String   @default("")
+  fullNameFromOcr String @default("")
+  ocrConfidence   Float    @default(0)
+  ocrParsedAt     DateTime?
+  mismatchFlags   String   @default("[]")
+  approvalStatus  String   @default("PENDING")
+  isOnline        Boolean  @default(false)
+  lastLatitude    Float?
+  lastLongitude   Float?
+  lastLocationAt  DateTime?
+  activeOrderId   String?
+  createdAt       DateTime @default(now())
+  orders          Order[]
+  assignments     CourierAssignment[]
+}
+
+model Menu {
+  id          String   @id
+  merchantId  String
+  merchant    Merchant @relation(fields: [merchantId], references: [id])
+  category    String
+  name        String
+  description String
+  price       Int
+  stock       Int      @default(99)
+  isAvailable Boolean  @default(true)
+  imageUrl    String   @default("")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  orderItems  OrderItem[]
+}
+
+model Order {
+  id                 String   @id
+  customerId         String
+  customer           Customer @relation(fields: [customerId], references: [id])
+  status             String
+  /// CASH (MVP) | ONLINE (gateway, saat diaktifkan)
+  paymentMethod      String   @default("CASH")
+  /// UNPAID | PENDING | PAID | PAID_CASH | FAILED | EXPIRED | REFUNDED | CANCELLED
+  paymentStatus      String   @default("UNPAID")
+  foodSubtotal       Int
+  deliveryFee        Int
+  platformFee        Int
+  grandTotal         Int
+  courierEarning     Int
+  deliveryAddress    String
+  deliveryLatitude   Float
+  deliveryLongitude  Float
+  routeDistanceKm    Float
+  billedDistanceKm   Int
+  courierId          String?
+  courier            Courier? @relation(fields: [courierId], references: [id])
+  createdAt          DateTime @default(now())
+  acceptedAt         DateTime?
+  pickedUpAt         DateTime?
+  deliveredAt        DateTime?
+  completedAt        DateTime?
+  /// Saat pembayaran customer lunas (tunai di complete, online saat gateway PAID)
+  paidAt             DateTime?
+  cancelledAt        DateTime?
+  cancelReason       String?
+  merchants          OrderMerchant[]
+  items              OrderItem[]
+  payments           Payment[]
+  transactions       LedgerTransaction[]
+  assignments        CourierAssignment[]
+}
+
+model OrderMerchant {
+  id               String   @id
+  orderId          String
+  order            Order    @relation(fields: [orderId], references: [id])
+  merchantId       String
+  merchant         Merchant @relation(fields: [merchantId], references: [id])
+  subtotal         Int
+  commissionRate   Float
+  commissionAmount Int
+  merchantAmount   Int
+  status           String
+  createdAt        DateTime @default(now())
+  completedAt      DateTime?
+  items            OrderItem[]
+}
+
+model OrderItem {
+  id              String        @id
+  orderId         String
+  order           Order         @relation(fields: [orderId], references: [id])
+  orderMerchantId String
+  orderMerchant   OrderMerchant @relation(fields: [orderMerchantId], references: [id])
+  merchantId      String
+  menuId          String
+  menu            Menu          @relation(fields: [menuId], references: [id])
+  name            String
+  unitPrice       Int
+  qty             Int
+  subtotal        Int
+}
+
+model CourierAssignment {
+  id          String    @id
+  orderId     String
+  order       Order     @relation(fields: [orderId], references: [id])
+  courierId   String
+  courier     Courier   @relation(fields: [courierId], references: [id])
+  status      String
+  offeredAt   DateTime  @default(now())
+  respondedAt DateTime?
+}
+
+model Payment {
+  id                   String   @id
+  orderId              String
+  order                Order    @relation(fields: [orderId], references: [id])
+  customerId           String
+  /// CASH | ONLINE
+  method               String   @default("CASH")
+  /// CASH_ON_DELIVERY | QRIS | EWALLET | VA | CARD
+  channel              String   @default("CASH_ON_DELIVERY")
+  /// NONE | STUB | MIDTRANS | XENDIT (isi saat gateway aktif)
+  provider             String   @default("NONE")
+  /// ID charge/invoice di payment gateway
+  providerRef          String?
+  idempotencyKey       String?  @unique
+  amount               Int
+  currency             String   @default("IDR")
+  /// INITIATED | PENDING | COLLECTED | PAID | FAILED | EXPIRED | REFUNDED | CANCELLED
+  status               String   @default("COLLECTED")
+  /// Wajib untuk CASH; kosong untuk ONLINE
+  collectedByCourierId String   @default("")
+  checkoutUrl          String?
+  failureReason        String?
+  /// JSON ringkas create/webhook (debug & rekonsiliasi)
+  rawPayload           String?
+  paidAt               DateTime?
+  failedAt             DateTime?
+  expiresAt            DateTime?
+  createdAt            DateTime @default(now())
+  /// Diisi aplikasi; tidak memakai @updatedAt agar db push tidak merusak tabel lokal lama
+  updatedAt            DateTime @default(now())
+}
+
+model LedgerTransaction {
+  id        String   @id
+  orderId   String?
+  order     Order?   @relation(fields: [orderId], references: [id])
+  type      String
+  partyType String
+  partyId   String
+  amount    Int
+  createdAt DateTime @default(now())
+}
+
+model MerchantSettlement {
+  id               String    @id
+  merchantId       String
+  merchant         Merchant  @relation(fields: [merchantId], references: [id])
+  periodStart      DateTime
+  periodEnd        DateTime
+  totalSales       Int
+  commissionRate   Float
+  commissionAmount Int
+  paidAmount       Int
+  remainingAmount  Int
+  paymentMethod    String    @default("TRANSFER")
+  proofUrl         String?
+  status           String    @default("PENDING")
+  createdAt        DateTime  @default(now())
+  verifiedAt       DateTime?
+  verifiedBy       String?
+}
+
+model Setting {
+  id                     String   @id @default("business")
+  commissionRate         Float
+  deliveryRatePerKm      Int
+  customerServiceFee     Int
+  paymentMethodMvp       String
+  /// false = MVP cash only; true = izinkan method ONLINE (butuh paymentProvider ≠ NONE)
+  onlinePaymentsEnabled  Boolean  @default(false)
+  /// NONE | STUB | MIDTRANS | XENDIT
+  paymentProvider        String   @default("NONE")
+  settlementPeriod       String
+  minimumSettlement      Int
+  distanceRounding       String
+  commissionBase         String
+  deliveryFeeBelongsTo   String
+  payoutBankName         String   @default("BCA")
+  payoutAccountNumber    String   @default("1234567890")
+  payoutAccountName      String   @default("Founder ANTARQ")
+  deliveryMode           String   @default("PER_KM")
+  deliveryFlatFee        Int      @default(10000)
+  updatedAt              DateTime @updatedAt
+}

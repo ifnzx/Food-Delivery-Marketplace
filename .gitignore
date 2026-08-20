@@ -1,0 +1,33 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Environment & secrets
+.env
+.env.*
+!.env.example
+*.local
+serviceAccount*.json
+
+# Local database
+04-database/*.db
+04-database/*.db-journal
+04-database/*.db-wal
+04-database/*.db-shm
+
+# Firebase
+.firebase/
+firebase-debug.log
+firestore-debug.log
+
+# Flutter / Next
+**/build/
+**/.dart_tool/
+**/.next/
+**/out/
+
+# OS
+.DS_Store
+Thumbs.db
+*.log

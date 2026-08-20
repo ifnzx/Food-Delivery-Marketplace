@@ -1,0 +1,43 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function role() {
+      return request.auth.token.role;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && (role() == 'ADMIN' || role() == 'SUPER_ADMIN');
+    }
+
+    match /merchants/{merchantId}/logo/{fileName} {
+      allow read: if isSignedIn();
+      allow write: if isSignedIn() && (request.auth.uid == merchantId || isAdmin());
+    }
+
+    match /merchants/{merchantId}/menus/{fileName} {
+      allow read: if isSignedIn();
+      allow write: if isSignedIn() && (request.auth.uid == merchantId || isAdmin());
+    }
+
+    match /settlements/{merchantId}/{fileName} {
+      allow read: if isSignedIn() && (request.auth.uid == merchantId || isAdmin());
+      allow write: if isSignedIn() && request.auth.uid == merchantId
+        && request.resource.size < 5 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*');
+    }
+
+    match /users/{userId}/{allPaths=**} {
+      allow read: if isSignedIn() && (request.auth.uid == userId || isAdmin());
+      allow write: if isSignedIn() && request.auth.uid == userId;
+    }
+
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}
