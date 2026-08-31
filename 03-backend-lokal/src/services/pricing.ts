@@ -1,4 +1,5 @@
 import { prisma } from "../db";
+import { isPostgres, qTable } from "../lib/dbDialect";
 import {
   BUSINESS_RULES,
   calculateGrandTotal,
@@ -16,6 +17,7 @@ export type Pricing = {
 };
 
 export async function ensurePricingColumns() {
+  if (isPostgres()) return;
   const alters = [
     `ALTER TABLE Setting ADD COLUMN deliveryMode TEXT NOT NULL DEFAULT 'PER_KM'`,
     `ALTER TABLE Setting ADD COLUMN deliveryFlatFee INTEGER NOT NULL DEFAULT 10000`,
@@ -36,7 +38,7 @@ export async function getPricing(): Promise<Pricing> {
   let flat = 10000;
   try {
     const extra = (await prisma.$queryRawUnsafe(
-      `SELECT deliveryMode, deliveryFlatFee FROM Setting WHERE id = 'business'`
+      `SELECT deliveryMode, deliveryFlatFee FROM ${qTable("Setting")} WHERE id = 'business'`
     )) as Array<{ deliveryMode?: string; deliveryFlatFee?: number }>;
     mode = String(extra[0]?.deliveryMode || "PER_KM").toUpperCase();
     flat = Number(extra[0]?.deliveryFlatFee ?? 10000);

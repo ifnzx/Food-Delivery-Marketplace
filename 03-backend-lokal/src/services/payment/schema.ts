@@ -1,7 +1,9 @@
 import { prisma } from "../../db";
+import { isPostgres } from "../../lib/dbDialect";
 
 /** Pastikan kolom payment gateway ada di SQLite lama tanpa wajib reset. */
 export async function ensurePaymentSchema() {
+  if (isPostgres()) return;
   const alters = [
     `ALTER TABLE "Order" ADD COLUMN paidAt DATETIME`,
     `ALTER TABLE Payment ADD COLUMN channel TEXT NOT NULL DEFAULT 'CASH_ON_DELIVERY'`,

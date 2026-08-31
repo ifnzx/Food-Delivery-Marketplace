@@ -3,10 +3,15 @@
   "private": true,
   "scripts": {
     "dev": "tsx watch src/server.ts",
+    "dev:lan": "tsx watch src/server.ts",
     "start": "tsx src/server.ts",
     "seed": "tsx src/seed.ts",
     "db:push": "prisma db push",
     "db:reset": "prisma db push && tsx src/seed.ts",
+    "db:local:generate": "prisma generate",
+    "db:supabase:generate": "prisma generate --schema=prisma/schema.supabase.prisma",
+    "db:supabase:push": "prisma db push --schema=prisma/schema.supabase.prisma",
+    "db:supabase:setup": "npm run db:supabase:generate && npm run db:supabase:push && npm run seed",
     "studio": "prisma studio --port 5555"
   },
   "dependencies": {

@@ -1,5 +1,6 @@
 import { prisma } from "../db";
 import { newId } from "./auth";
+import { isPostgres, qTable, sqlOrderDesc } from "./dbDialect";
 
 function safeId(id: string) {
   return String(id || "").replace(/[^A-Za-z0-9_-]/g, "");
@@ -67,6 +68,7 @@ function mapRow(row: Record<string, unknown>): SupportReportRow {
 }
 
 export async function ensureSupportReports() {
+  if (isPostgres()) return;
   await prisma.$executeRawUnsafe(`
     CREATE TABLE IF NOT EXISTS SupportReport (
       id TEXT PRIMARY KEY,
@@ -100,8 +102,13 @@ export async function ensureSupportReports() {
 }
 
 export async function countOpenSupportReports() {
+  if (isPostgres()) {
+    return prisma.supportReport.count({
+      where: { status: { in: ["OPEN", "IN_PROGRESS"] } },
+    });
+  }
   const rows = (await prisma.$queryRawUnsafe(
-    `SELECT COUNT(*) AS c FROM SupportReport WHERE status IN ('OPEN', 'IN_PROGRESS')`
+    `SELECT COUNT(*) AS c FROM ${qTable("SupportReport")} WHERE status IN ('OPEN', 'IN_PROGRESS')`
   )) as Array<{ c: number | bigint }>;
   const raw = rows[0]?.c ?? 0;
   return typeof raw === "bigint" ? Number(raw) : Number(raw);
@@ -127,7 +134,7 @@ export async function createSupportReport(input: {
     : "OTHER";
   const orderId = input.orderId ? safeId(input.orderId) : "";
   await prisma.$executeRawUnsafe(
-    `INSERT INTO SupportReport (
+    `INSERT INTO ${qTable("SupportReport")} (
       id, reporterUserId, reporterRole, reporterName, reporterPhone, reporterEmail,
       category, subject, body, orderId, status, createdAt, updatedAt
     ) VALUES (
@@ -144,8 +151,8 @@ export async function createSupportReport(input: {
 export async function listSupportReportsForUser(userId: string) {
   const uid = safeId(userId);
   const rows = (await prisma.$queryRawUnsafe(
-    `SELECT * FROM SupportReport WHERE reporterUserId = '${uid}'
-     ORDER BY datetime(createdAt) DESC, id DESC`
+    `SELECT * FROM ${qTable("SupportReport")} WHERE reporterUserId = '${uid}'
+     ORDER BY ${sqlOrderDesc("createdAt")}, id DESC`
   )) as Array<Record<string, unknown>>;
   return rows.map(mapRow);
 }
@@ -153,7 +160,7 @@ export async function listSupportReportsForUser(userId: string) {
 export async function getSupportReportById(id: string) {
   const rid = safeId(id);
   const rows = (await prisma.$queryRawUnsafe(
-    `SELECT * FROM SupportReport WHERE id = '${rid}' LIMIT 1`
+    `SELECT * FROM ${qTable("SupportReport")} WHERE id = '${rid}' LIMIT 1`
   )) as Array<Record<string, unknown>>;
   return rows[0] ? mapRow(rows[0]) : null;
 }
@@ -176,8 +183,8 @@ export async function listSupportReportsAdmin(filters?: {
   }
   const where = clauses.length ? `WHERE ${clauses.join(" AND ")}` : "";
   const rows = (await prisma.$queryRawUnsafe(
-    `SELECT * FROM SupportReport ${where}
-     ORDER BY datetime(createdAt) DESC, id DESC`
+    `SELECT * FROM ${qTable("SupportReport")} ${where}
+     ORDER BY ${sqlOrderDesc("createdAt")}, id DESC`
   )) as Array<Record<string, unknown>>;
   let list = rows.map(mapRow);
   if (q) {
@@ -216,7 +223,7 @@ export async function updateSupportReportAdmin(
       : null;
 
   await prisma.$executeRawUnsafe(
-    `UPDATE SupportReport SET
+    `UPDATE ${qTable("SupportReport")} SET
       status = '${sqlStr(status)}',
       adminNote = ${adminNote ? `'${sqlStr(adminNote)}'` : "NULL"},
       resolvedBy = ${resolvedBy ? `'${sqlStr(resolvedBy)}'` : "NULL"},

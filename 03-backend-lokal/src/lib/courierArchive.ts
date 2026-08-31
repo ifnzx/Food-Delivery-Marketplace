@@ -4,12 +4,17 @@ import { prisma } from "../db";
 import { newId } from "./auth";
 import { readKtpFile, uploadsRoot } from "./uploadImage";
 import { ensureCourierKtpProfileColumns } from "./courierKtpProfile";
+import { isPostgres } from "./dbDialect";
 
 function safeId(id: string) {
   return String(id || "").replace(/[^A-Za-z0-9_-]/g, "");
 }
 
 export async function ensureCourierArchive() {
+  if (isPostgres()) {
+    await ensureCourierKtpProfileColumns();
+    return;
+  }
   await ensureCourierKtpProfileColumns();
   const alters = [
     `ALTER TABLE Courier ADD COLUMN ktpPhotoUrl TEXT NOT NULL DEFAULT ''`,

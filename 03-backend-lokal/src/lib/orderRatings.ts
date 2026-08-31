@@ -1,5 +1,6 @@
 import { prisma } from "../db";
 import { newId } from "./auth";
+import { isPostgres, qTable } from "./dbDialect";
 
 function safeId(id: string) {
   return String(id || "").replace(/[^A-Za-z0-9_-]/g, "");
@@ -38,6 +39,7 @@ function mapRow(row: Record<string, unknown>): OrderRatingRow {
 }
 
 export async function ensureOrderRatings() {
+  if (isPostgres()) return;
   await prisma.$executeRawUnsafe(`
     CREATE TABLE IF NOT EXISTS OrderRating (
       id TEXT PRIMARY KEY,
@@ -66,7 +68,7 @@ export async function ensureOrderRatings() {
 export async function getOrderRating(orderId: string) {
   const oid = safeId(orderId);
   const rows = (await prisma.$queryRawUnsafe(
-    `SELECT * FROM OrderRating WHERE orderId = '${oid}' LIMIT 1`
+    `SELECT * FROM ${qTable("OrderRating")} WHERE orderId = '${oid}' LIMIT 1`
   )) as Array<Record<string, unknown>>;
   return rows[0] ? mapRow(rows[0]) : null;
 }
@@ -101,7 +103,7 @@ export async function submitOrderRating(input: {
   const courierId = input.courierId ? safeId(input.courierId) : "";
 
   await prisma.$executeRawUnsafe(
-    `INSERT INTO OrderRating (
+    `INSERT INTO ${qTable("OrderRating")} (
       id, orderId, customerId, merchantId, courierId,
       merchantScore, courierScore, comment, createdAt
     ) VALUES (

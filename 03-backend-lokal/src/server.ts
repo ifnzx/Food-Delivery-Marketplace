@@ -1,7 +1,9 @@
 import path from "path";
+import os from "os";
 import express, { type NextFunction, type Request, type Response } from "express";
 import cors from "cors";
 import { googleBrowserKey, loadEnv } from "./lib/env";
+import { isPostgres } from "./lib/dbDialect";
 import { googleMapsConfigured } from "./lib/googleMaps";
 import { fail } from "./lib/http";
 import { ensureCourierArchive } from "./lib/courierArchive";
@@ -45,7 +47,7 @@ app.use((error: unknown, _req: Request, res: Response, _next: NextFunction) => {
   fail(res, 400, error instanceof Error ? error.message : "Terjadi kesalahan server");
 });
 
-app.listen(PORT, async () => {
+app.listen(PORT, "0.0.0.0", async () => {
   await ensureCourierArchive();
   await ensureOrderChat();
   await ensureSupportReports();
@@ -53,9 +55,22 @@ app.listen(PORT, async () => {
   await ensurePricingColumns();
   await ensurePlacementColumns();
   await ensurePaymentSchema();
+  const lanHosts = Object.entries(os.networkInterfaces())
+    .flatMap(([iface, addrs]) =>
+      (addrs ?? [])
+        .filter((n) => n && !n.internal && n.family === "IPv4")
+        .map((n) => ({ iface, address: n!.address }))
+    );
+  console.log(`Database: ${isPostgres() ? "Supabase (PostgreSQL)" : "SQLite lokal"}`);
   console.log(`Customer UI: http://localhost:${PORT}/customer.html`);
   console.log(`Kurir GPS:   http://localhost:${PORT}/courier.html`);
   console.log(`Review UI:   http://localhost:${PORT}`);
+  if (lanHosts.length) {
+    console.log("Device lain (WiFi) — coba salah satu URL:");
+    for (const { iface, address } of lanHosts) {
+      console.log(`  [${iface}] http://${address}:${PORT}/customer.html`);
+    }
+  }
   console.log(
     googleMapsConfigured()
       ? "Google Maps: aktif (Distance Matrix + Geocoding)"

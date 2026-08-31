@@ -1,4 +1,5 @@
 import { prisma } from "../db";
+import { isPostgres } from "./dbDialect";
 
 export type CourierKtpProfile = {
   nik: string;
@@ -20,6 +21,7 @@ function sqlStr(value: string) {
 }
 
 export async function ensureCourierKtpProfileColumns() {
+  if (isPostgres()) return;
   const alters = [
     `ALTER TABLE Courier ADD COLUMN nik TEXT NOT NULL DEFAULT ''`,
     `ALTER TABLE Courier ADD COLUMN placeOfBirth TEXT NOT NULL DEFAULT ''`,

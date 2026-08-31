@@ -1,11 +1,13 @@
 import { prisma } from "../db";
 import { newId } from "./auth";
+import { isPostgres, qTable, sqlOrderAsc } from "./dbDialect";
 
 function safeId(id: string) {
   return String(id || "").replace(/[^A-Za-z0-9_-]/g, "");
 }
 
 export async function ensureOrderChat() {
+  if (isPostgres()) return;
   await prisma.$executeRawUnsafe(`
     CREATE TABLE IF NOT EXISTS OrderChatMessage (
       id TEXT PRIMARY KEY,
@@ -38,8 +40,8 @@ export async function listOrderChat(orderId: string): Promise<ChatRow[]> {
   const id = safeId(orderId);
   const rows = (await prisma.$queryRawUnsafe(
     `SELECT id, orderId, senderRole, senderName, body, createdAt
-     FROM OrderChatMessage WHERE orderId = '${id}'
-     ORDER BY datetime(createdAt) ASC, id ASC`
+     FROM ${qTable("OrderChatMessage")} WHERE orderId = '${id}'
+     ORDER BY ${sqlOrderAsc("createdAt")}, id ASC`
   )) as Array<Record<string, unknown>>;
   return rows.map((row) => ({
     id: String(row.id),
@@ -75,9 +77,9 @@ export async function sendOrderChat(input: {
     body,
     createdAt: new Date().toISOString(),
   };
-  await prisma.$executeRaw`
-    INSERT INTO OrderChatMessage (id, orderId, senderRole, senderName, body, createdAt)
-    VALUES (${row.id}, ${row.orderId}, ${row.senderRole}, ${row.senderName}, ${row.body}, ${row.createdAt})
-  `;
+  await prisma.$executeRawUnsafe(
+    `INSERT INTO ${qTable("OrderChatMessage")} (id, orderId, senderRole, senderName, body, createdAt)
+     VALUES ('${row.id.replace(/'/g, "''")}', '${row.orderId.replace(/'/g, "''")}', '${row.senderRole.replace(/'/g, "''")}', '${row.senderName.replace(/'/g, "''")}', '${row.body.replace(/'/g, "''")}', '${row.createdAt}')`
+  );
   return row;
 }

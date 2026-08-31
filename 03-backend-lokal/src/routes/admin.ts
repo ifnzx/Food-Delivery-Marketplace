@@ -1,5 +1,6 @@
 import { Router, type Response } from "express";
 import { prisma } from "../db";
+import { isPostgres, qCol, qTable, sqlIfNull } from "../lib/dbDialect";
 import { fail, param, type AuthedRequest } from "../lib/http";
 import { auth, requireRole } from "../middleware/auth";
 import { BUSINESS_RULES } from "../../../02-aturan-bisnis/businessRules";
@@ -14,7 +15,6 @@ import { getCourierKtpProfile, ktpProfileMap } from "../lib/courierKtpProfile";
 import { readKtpFromImage } from "../services/ktpOcr";
 import { ensurePricingColumns, getPricing } from "../services/pricing";
 import { saveUploadedImage } from "../lib/uploadImage";
-import { countOpenSupportReports } from "../lib/supportReports";
 import {
   ensurePlacementColumns,
   featuredMerchantIds,
@@ -34,6 +34,10 @@ import {
   recordCourierPriorityPayment,
   priorityRevenueSummary,
 } from "../lib/placement";
+import {
+  loadAdminDashboardCoreStats,
+  loadAdminDashboardRankings,
+} from "../services/adminDashboard";
 
 export const adminRouter = Router();
 
@@ -42,81 +46,7 @@ adminRouter.get(
   auth,
   requireRole("ADMIN", "SUPER_ADMIN"),
   async (_req, res) => {
-    const [
-      customers,
-      merchants,
-      couriers,
-      courierOnline,
-      courierPending,
-      merchantPending,
-      orders,
-      completed,
-      cancelled,
-      gmvAgg,
-      feeAgg,
-      courierEarnAgg,
-      outstandingAgg,
-      pendingSettlements,
-      customerSuspended,
-      merchantSuspended,
-      courierSuspended,
-      activeOrders,
-      waitingOutlet,
-      withCourier,
-      supportOpen,
-    ] = await Promise.all([
-      prisma.customer.count(),
-      prisma.merchant.count({ where: { status: "ACTIVE" } }),
-      prisma.courier.count(),
-      prisma.courier.count({ where: { isOnline: true } }),
-      prisma.courier.count({ where: { approvalStatus: "PENDING" } }),
-      prisma.merchant.count({ where: { status: "PENDING" } }),
-      prisma.order.count(),
-      prisma.order.count({ where: { status: "COMPLETED" } }),
-      prisma.order.count({ where: { status: "CANCELLED" } }),
-      prisma.order.aggregate({
-        _sum: { grandTotal: true },
-        where: { status: { not: "CANCELLED" } },
-      }),
-      prisma.order.aggregate({
-        _sum: { platformFee: true },
-        where: { status: "COMPLETED" },
-      }),
-      prisma.order.aggregate({
-        _sum: { courierEarning: true },
-        where: { status: "COMPLETED" },
-      }),
-      prisma.merchant.aggregate({ _sum: { outstandingAmount: true } }),
-      prisma.merchantSettlement.count({ where: { status: "PENDING" } }),
-      prisma.customer.count({ where: { status: "SUSPENDED" } }),
-      prisma.merchant.count({ where: { status: "SUSPENDED" } }),
-      prisma.courier.count({ where: { approvalStatus: "SUSPENDED" } }),
-      prisma.order.count({
-        where: {
-          status: {
-            in: [
-              "WAITING_OUTLET",
-              "PREPARING",
-              "READY_FOR_PICKUP",
-              "ASSIGNED",
-              "PICKED_UP",
-              "DELIVERING",
-            ],
-          },
-        },
-      }),
-      prisma.order.count({
-        where: {
-          status: { in: ["WAITING_OUTLET", "PREPARING", "READY_FOR_PICKUP"] },
-        },
-      }),
-      prisma.order.count({
-        where: {
-          status: { in: ["ASSIGNED", "PICKED_UP", "DELIVERING"] },
-        },
-      }),
-      countOpenSupportReports(),
-    ]);
+    const stats = await loadAdminDashboardCoreStats();
     const pricing = await getPricing();
     const { buildBillingSnapshot } = await import("../services/merchantBilling");
     const settings = await prisma.setting.findUnique({ where: { id: "business" } });
@@ -124,26 +54,7 @@ adminRouter.get(
       settings?.minimumSettlement ?? BUSINESS_RULES.MINIMUM_SETTLEMENT_DEFAULT;
     const settlementDays = BUSINESS_RULES.SETTLEMENT_CALENDAR_DAYS;
     const priorityRevenue = await priorityRevenueSummary();
-
-    const [merchantRows, courierRows] = await Promise.all([
-      prisma.merchant.findMany({
-        include: {
-          orderMerchants: {
-            where: { status: "COMPLETED" },
-            select: { subtotal: true, commissionAmount: true },
-          },
-        },
-      }),
-      prisma.courier.findMany({
-        where: { approvalStatus: "APPROVED" },
-        include: {
-          orders: {
-            where: { status: "COMPLETED" },
-            select: { courierEarning: true },
-          },
-        },
-      }),
-    ]);
+    const { merchantRows, courierRows } = await loadAdminDashboardRankings();
 
     const outletRanking = merchantRows
       .filter((m) => m.status === "ACTIVE")
@@ -207,27 +118,27 @@ adminRouter.get(
       });
 
     res.json({
-      totalCustomer: customers,
-      merchantActive: merchants,
-      totalCourier: couriers,
-      courierOnline,
-      courierPending,
-      merchantPending,
-      orderCount: orders,
-      orderCompleted: completed,
-      orderCancelled: cancelled,
-      gmv: gmvAgg._sum.grandTotal ?? 0,
-      platformFee: feeAgg._sum.platformFee ?? 0,
-      courierEarningsPaid: courierEarnAgg._sum.courierEarning ?? 0,
-      outstandingSettlement: outstandingAgg._sum.outstandingAmount ?? 0,
-      pendingSettlements,
-      customerSuspended,
-      merchantSuspended,
-      courierSuspended,
-      activeOrders,
-      waitingOutlet,
-      withCourier,
-      supportOpen,
+      totalCustomer: stats.customers,
+      merchantActive: stats.merchants,
+      totalCourier: stats.couriers,
+      courierOnline: stats.courierOnline,
+      courierPending: stats.courierPending,
+      merchantPending: stats.merchantPending,
+      orderCount: stats.orders,
+      orderCompleted: stats.completed,
+      orderCancelled: stats.cancelled,
+      gmv: stats.gmv,
+      platformFee: stats.platformFee,
+      courierEarningsPaid: stats.courierEarningsPaid,
+      outstandingSettlement: stats.outstandingSettlement,
+      pendingSettlements: stats.pendingSettlements,
+      customerSuspended: stats.customerSuspended,
+      merchantSuspended: stats.merchantSuspended,
+      courierSuspended: stats.courierSuspended,
+      activeOrders: stats.activeOrders,
+      waitingOutlet: stats.waitingOutlet,
+      withCourier: stats.withCourier,
+      supportOpen: stats.supportOpen,
       commissionRate: pricing.commissionRate,
       deliveryMode: pricing.deliveryMode,
       deliveryRatePerKm: pricing.deliveryRatePerKm,
@@ -1289,7 +1200,7 @@ adminRouter.put(
       } WHERE id = 'business'`
     );
     await prisma.$executeRawUnsafe(
-      `UPDATE Merchant SET commissionRate = ${rate} WHERE IFNULL(isFeatured, 0) = 0`
+      `UPDATE ${qTable("Merchant")} SET commissionRate = ${rate} WHERE ${sqlIfNull(qCol("isFeatured"), isPostgres() ? "false" : 0)} = ${isPostgres() ? "false" : 0}`
     );
     const pricing = await getPricing();
     res.json({
@@ -1365,7 +1276,7 @@ adminRouter.put(
 
     // Update semua merchant rekomendasi ke tarif baru
     await prisma.$executeRawUnsafe(
-      `UPDATE Merchant SET commissionRate = ${featuredRate} WHERE IFNULL(isFeatured,0) = 1`
+      `UPDATE ${qTable("Merchant")} SET commissionRate = ${featuredRate} WHERE ${sqlIfNull(qCol("isFeatured"), isPostgres() ? "false" : 0)} = ${isPostgres() ? "true" : 1}`
     );
 
     const saved = await getPlacementSettings();

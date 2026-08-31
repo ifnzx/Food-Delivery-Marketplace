@@ -42,6 +42,9 @@ Cara menjalankan uji coba:
 2. Jalankan: npm run dev
 3. Buka browser: http://localhost:3001
 
+Uji coba multi-device (Supabase + WiFi):
+→ baca 01-dokumentasi/SUPABASE.md
+
 Password semua akun demo: password123
 - admin@local.test
 - andi@local.test
