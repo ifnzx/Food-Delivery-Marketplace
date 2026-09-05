@@ -238,6 +238,17 @@ export async function setMerchantFeatured(merchantId: string, featured: boolean)
 
 export async function merchantFeaturedRequest(merchantId: string) {
   await ensurePlacementColumns();
+  if (isPostgres()) {
+    const row = await prisma.merchant.findUnique({
+      where: { id: merchantId },
+      select: { featuredRequestAt: true, featuredRequestStatus: true },
+    });
+    if (!row?.featuredRequestStatus) return null;
+    return {
+      status: String(row.featuredRequestStatus),
+      requestedAt: iso(row.featuredRequestAt),
+    };
+  }
   const rows = (await prisma.$queryRawUnsafe(
     `SELECT featuredRequestAt, featuredRequestStatus
      FROM ${qTable("Merchant")} WHERE id = '${sqlStr(merchantId)}' LIMIT 1`
@@ -263,16 +274,33 @@ export async function requestMerchantFeatured(merchantId: string) {
     return existing;
   }
   const now = new Date().toISOString();
-  await prisma.$executeRawUnsafe(
-    `UPDATE ${qTable("Merchant")} SET featuredRequestAt = '${now}',
-     featuredRequestStatus = 'PENDING'
-     WHERE id = '${sqlStr(merchantId)}'`
-  );
+  if (isPostgres()) {
+    await prisma.merchant.update({
+      where: { id: merchantId },
+      data: {
+        featuredRequestAt: new Date(now),
+        featuredRequestStatus: "PENDING",
+      },
+    });
+  } else {
+    await prisma.$executeRawUnsafe(
+      `UPDATE ${qTable("Merchant")} SET ${qCol("featuredRequestAt")} = '${now}',
+       ${qCol("featuredRequestStatus")} = 'PENDING'
+       WHERE id = '${sqlStr(merchantId)}'`
+    );
+  }
   return { status: "PENDING", requestedAt: now };
 }
 
 export async function clearMerchantFeaturedRequest(merchantId: string) {
   await ensurePlacementColumns();
+  if (isPostgres()) {
+    await prisma.merchant.update({
+      where: { id: merchantId },
+      data: { featuredRequestAt: null, featuredRequestStatus: null },
+    });
+    return;
+  }
   await prisma.$executeRawUnsafe(
     `UPDATE ${qTable("Merchant")} SET featuredRequestAt = NULL, featuredRequestStatus = NULL
      WHERE id = '${sqlStr(merchantId)}'`
@@ -281,6 +309,25 @@ export async function clearMerchantFeaturedRequest(merchantId: string) {
 
 export async function merchantFeaturedRequestMap() {
   await ensurePlacementColumns();
+  if (isPostgres()) {
+    const rows = await prisma.merchant.findMany({
+      where: { featuredRequestStatus: { not: null } },
+      select: {
+        id: true,
+        featuredRequestAt: true,
+        featuredRequestStatus: true,
+      },
+    });
+    const map = new Map<string, { status: string; requestedAt: string | null }>();
+    for (const row of rows) {
+      if (!row.featuredRequestStatus) continue;
+      map.set(String(row.id), {
+        status: String(row.featuredRequestStatus),
+        requestedAt: iso(row.featuredRequestAt),
+      });
+    }
+    return map;
+  }
   const rows = (await prisma.$queryRawUnsafe(
     `SELECT id, featuredRequestAt, featuredRequestStatus
      FROM ${qTable("Merchant")} WHERE featuredRequestStatus IS NOT NULL`
@@ -305,6 +352,13 @@ export async function merchantFeaturedRequestMap() {
 
 export async function courierPriorityUntil(courierId: string) {
   await ensurePlacementColumns();
+  if (isPostgres()) {
+    const row = await prisma.courier.findUnique({
+      where: { id: courierId },
+      select: { priorityUntil: true },
+    });
+    return iso(row?.priorityUntil);
+  }
   const rows = (await prisma.$queryRawUnsafe(
     `SELECT priorityUntil FROM ${qTable("Courier")} WHERE id = '${sqlStr(courierId)}' LIMIT 1`
   )) as Array<{ priorityUntil?: unknown }>;
@@ -319,6 +373,14 @@ export function isPriorityActive(until: string | null | undefined, now = new Dat
 
 export async function courierPriorityMap() {
   await ensurePlacementColumns();
+  if (isPostgres()) {
+    const rows = await prisma.courier.findMany({
+      select: { id: true, priorityUntil: true },
+    });
+    const map = new Map<string, string | null>();
+    for (const row of rows) map.set(String(row.id), iso(row.priorityUntil));
+    return map;
+  }
   const rows = (await prisma.$queryRawUnsafe(
     `SELECT id, priorityUntil FROM ${qTable("Courier")}`
   )) as Array<{ id: string; priorityUntil?: unknown }>;
@@ -334,6 +396,19 @@ export async function setCourierPriority(courierId: string, hours: number) {
   await ensurePlacementColumns();
   const until = new Date();
   until.setTime(until.getTime() + Math.max(1, Math.round(hours)) * 60 * 60 * 1000);
+  if (isPostgres()) {
+    await prisma.courier.update({
+      where: { id: courierId },
+      data: {
+        priorityUntil: until,
+        priorityRequestAt: null,
+        priorityRequestStatus: null,
+        priorityRequestFee: null,
+        priorityProofUrl: null,
+      },
+    });
+    return until.toISOString();
+  }
   await prisma.$executeRawUnsafe(
     `UPDATE ${qTable("Courier")} SET priorityUntil = '${until.toISOString()}',
      priorityRequestAt = NULL, priorityRequestStatus = NULL,
@@ -345,6 +420,13 @@ export async function setCourierPriority(courierId: string, hours: number) {
 
 export async function clearCourierPriority(courierId: string) {
   await ensurePlacementColumns();
+  if (isPostgres()) {
+    await prisma.courier.update({
+      where: { id: courierId },
+      data: { priorityUntil: null },
+    });
+    return;
+  }
   await prisma.$executeRawUnsafe(
     `UPDATE ${qTable("Courier")} SET priorityUntil = NULL WHERE id = '${sqlStr(courierId)}'`
   );
@@ -352,6 +434,24 @@ export async function clearCourierPriority(courierId: string) {
 
 export async function courierPriorityRequest(courierId: string) {
   await ensurePlacementColumns();
+  if (isPostgres()) {
+    const row = await prisma.courier.findUnique({
+      where: { id: courierId },
+      select: {
+        priorityRequestAt: true,
+        priorityRequestStatus: true,
+        priorityRequestFee: true,
+        priorityProofUrl: true,
+      },
+    });
+    if (!row?.priorityRequestStatus) return null;
+    return {
+      status: String(row.priorityRequestStatus),
+      requestedAt: iso(row.priorityRequestAt),
+      fee: Number(row.priorityRequestFee) || 0,
+      proofUrl: String(row.priorityProofUrl || "").trim() || null,
+    };
+  }
   const rows = (await prisma.$queryRawUnsafe(
     `SELECT priorityRequestAt, priorityRequestStatus, priorityRequestFee, priorityProofUrl
      FROM ${qTable("Courier")} WHERE id = '${sqlStr(courierId)}' LIMIT 1`
@@ -387,20 +487,39 @@ export async function requestCourierPriority(
   }
   const existing = await courierPriorityRequest(courierId);
   if (existing?.status === "PENDING") {
-    await prisma.$executeRawUnsafe(
-      `UPDATE ${qTable("Courier")} SET priorityProofUrl = '${sqlStr(proof)}'
-       WHERE id = '${sqlStr(courierId)}'`
-    );
+    if (isPostgres()) {
+      await prisma.courier.update({
+        where: { id: courierId },
+        data: { priorityProofUrl: proof },
+      });
+    } else {
+      await prisma.$executeRawUnsafe(
+        `UPDATE ${qTable("Courier")} SET priorityProofUrl = '${sqlStr(proof)}'
+         WHERE id = '${sqlStr(courierId)}'`
+      );
+    }
     return { ...existing, proofUrl: proof };
   }
   const now = new Date().toISOString();
-  await prisma.$executeRawUnsafe(
-    `UPDATE ${qTable("Courier")} SET priorityRequestAt = '${now}',
-     priorityRequestStatus = 'PENDING',
-     priorityRequestFee = ${placement.courierPriorityFee},
-     priorityProofUrl = '${sqlStr(proof)}'
-     WHERE id = '${sqlStr(courierId)}'`
-  );
+  if (isPostgres()) {
+    await prisma.courier.update({
+      where: { id: courierId },
+      data: {
+        priorityRequestAt: new Date(now),
+        priorityRequestStatus: "PENDING",
+        priorityRequestFee: placement.courierPriorityFee,
+        priorityProofUrl: proof,
+      },
+    });
+  } else {
+    await prisma.$executeRawUnsafe(
+      `UPDATE ${qTable("Courier")} SET priorityRequestAt = '${now}',
+       priorityRequestStatus = 'PENDING',
+       priorityRequestFee = ${placement.courierPriorityFee},
+       priorityProofUrl = '${sqlStr(proof)}'
+       WHERE id = '${sqlStr(courierId)}'`
+    );
+  }
   return {
     status: "PENDING",
     requestedAt: now,
@@ -411,6 +530,18 @@ export async function requestCourierPriority(
 
 export async function clearCourierPriorityRequest(courierId: string) {
   await ensurePlacementColumns();
+  if (isPostgres()) {
+    await prisma.courier.update({
+      where: { id: courierId },
+      data: {
+        priorityRequestAt: null,
+        priorityRequestStatus: null,
+        priorityRequestFee: null,
+        priorityProofUrl: null,
+      },
+    });
+    return;
+  }
   await prisma.$executeRawUnsafe(
     `UPDATE ${qTable("Courier")} SET priorityRequestAt = NULL,
      priorityRequestStatus = NULL, priorityRequestFee = NULL,
@@ -421,6 +552,24 @@ export async function clearCourierPriorityRequest(courierId: string) {
 
 export async function listPendingPriorityRequests() {
   await ensurePlacementColumns();
+  if (isPostgres()) {
+    const rows = await prisma.courier.findMany({
+      where: { priorityRequestStatus: "PENDING" },
+      select: {
+        id: true,
+        priorityRequestAt: true,
+        priorityRequestFee: true,
+        priorityProofUrl: true,
+      },
+      orderBy: { priorityRequestAt: "asc" },
+    });
+    return rows.map((r) => ({
+      courierId: String(r.id),
+      requestedAt: iso(r.priorityRequestAt),
+      fee: Number(r.priorityRequestFee) || 0,
+      proofUrl: String(r.priorityProofUrl || "").trim() || null,
+    }));
+  }
   const rows = (await prisma.$queryRawUnsafe(
     `SELECT id, priorityRequestAt, priorityRequestFee, priorityProofUrl
      FROM ${qTable("Courier")} WHERE priorityRequestStatus = 'PENDING'
@@ -441,6 +590,37 @@ export async function listPendingPriorityRequests() {
 
 export async function courierPriorityRequestMap() {
   await ensurePlacementColumns();
+  if (isPostgres()) {
+    const rows = await prisma.courier.findMany({
+      where: { priorityRequestStatus: { not: null } },
+      select: {
+        id: true,
+        priorityRequestAt: true,
+        priorityRequestStatus: true,
+        priorityRequestFee: true,
+        priorityProofUrl: true,
+      },
+    });
+    const map = new Map<
+      string,
+      {
+        status: string;
+        requestedAt: string | null;
+        fee: number;
+        proofUrl: string | null;
+      }
+    >();
+    for (const row of rows) {
+      if (!row.priorityRequestStatus) continue;
+      map.set(String(row.id), {
+        status: String(row.priorityRequestStatus),
+        requestedAt: iso(row.priorityRequestAt),
+        fee: Number(row.priorityRequestFee) || 0,
+        proofUrl: String(row.priorityProofUrl || "").trim() || null,
+      });
+    }
+    return map;
+  }
   const rows = (await prisma.$queryRawUnsafe(
     `SELECT id, priorityRequestAt, priorityRequestStatus, priorityRequestFee, priorityProofUrl
      FROM ${qTable("Courier")} WHERE priorityRequestStatus IS NOT NULL`
@@ -507,6 +687,20 @@ export async function recordCourierPriorityPayment(input: {
   const hours = Math.max(1, Math.round(input.hours));
   const proof = String(input.proofUrl || "").trim();
   const now = new Date().toISOString();
+  if (isPostgres()) {
+    await prisma.courierPriorityPayment.create({
+      data: {
+        id,
+        courierId: input.courierId,
+        fee,
+        hours,
+        proofUrl: proof || null,
+        approvedAt: new Date(now),
+        priorityUntil: new Date(input.priorityUntil),
+      },
+    });
+    return { id, fee, hours, approvedAt: now, priorityUntil: input.priorityUntil };
+  }
   await prisma.$executeRawUnsafe(
     `INSERT INTO CourierPriorityPayment
      (id, courierId, fee, hours, proofUrl, approvedAt, priorityUntil)

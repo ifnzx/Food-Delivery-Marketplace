@@ -1192,16 +1192,20 @@ adminRouter.put(
         deliveryRatePerKm: Number.isFinite(deliveryRatePerKm)
           ? deliveryRatePerKm
           : BUSINESS_RULES.DELIVERY_RATE_PER_KM,
+        deliveryMode,
+        deliveryFlatFee: Number.isFinite(deliveryFlatFee) ? deliveryFlatFee : 10000,
       },
     });
-    await prisma.$executeRawUnsafe(
-      `UPDATE Setting SET deliveryMode = '${deliveryMode}', deliveryFlatFee = ${
-        Number.isFinite(deliveryFlatFee) ? deliveryFlatFee : 10000
-      } WHERE id = 'business'`
-    );
-    await prisma.$executeRawUnsafe(
-      `UPDATE ${qTable("Merchant")} SET commissionRate = ${rate} WHERE ${sqlIfNull(qCol("isFeatured"), isPostgres() ? "false" : 0)} = ${isPostgres() ? "false" : 0}`
-    );
+    if (isPostgres()) {
+      await prisma.merchant.updateMany({
+        where: { isFeatured: false },
+        data: { commissionRate: rate },
+      });
+    } else {
+      await prisma.$executeRawUnsafe(
+        `UPDATE ${qTable("Merchant")} SET commissionRate = ${rate} WHERE ${sqlIfNull(qCol("isFeatured"), 0)} = 0`
+      );
+    }
     const pricing = await getPricing();
     res.json({
       ok: true,
@@ -1263,21 +1267,37 @@ adminRouter.put(
     const hours = durationToHours(duration, unit);
     const days = Math.max(1, Math.ceil(hours / 24));
 
-    await prisma.$executeRawUnsafe(
-      `UPDATE Setting SET
-       featuredCommissionRate = ${featuredRate},
-       courierPriorityFee = ${fee},
-       courierPriorityDays = ${days},
-       courierPriorityHours = ${hours},
-       courierPriorityUnit = '${unit}',
-       courierPriorityDuration = ${duration}
-       WHERE id = 'business'`
-    );
-
-    // Update semua merchant rekomendasi ke tarif baru
-    await prisma.$executeRawUnsafe(
-      `UPDATE ${qTable("Merchant")} SET commissionRate = ${featuredRate} WHERE ${sqlIfNull(qCol("isFeatured"), isPostgres() ? "false" : 0)} = ${isPostgres() ? "true" : 1}`
-    );
+    if (isPostgres()) {
+      await prisma.setting.update({
+        where: { id: "business" },
+        data: {
+          featuredCommissionRate: featuredRate,
+          courierPriorityFee: fee,
+          courierPriorityDays: days,
+          courierPriorityHours: hours,
+          courierPriorityUnit: unit,
+          courierPriorityDuration: duration,
+        },
+      });
+      await prisma.merchant.updateMany({
+        where: { isFeatured: true },
+        data: { commissionRate: featuredRate },
+      });
+    } else {
+      await prisma.$executeRawUnsafe(
+        `UPDATE Setting SET
+         featuredCommissionRate = ${featuredRate},
+         courierPriorityFee = ${fee},
+         courierPriorityDays = ${days},
+         courierPriorityHours = ${hours},
+         courierPriorityUnit = '${unit}',
+         courierPriorityDuration = ${duration}
+         WHERE id = 'business'`
+      );
+      await prisma.$executeRawUnsafe(
+        `UPDATE ${qTable("Merchant")} SET commissionRate = ${featuredRate} WHERE ${sqlIfNull(qCol("isFeatured"), 0)} = 1`
+      );
+    }
 
     const saved = await getPlacementSettings();
     res.json({
